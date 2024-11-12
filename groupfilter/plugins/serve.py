@@ -11,7 +11,7 @@ from pyrogram.types import (
     ChatMemberUpdated
 )
 from pyrogram.enums import ParseMode
-from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified
+from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified, ButtonDataInvalid
 from groupfilter.plugins.fsub import check_fsub
 from groupfilter.db.files_sql import (
     get_filter_results,
@@ -57,32 +57,38 @@ async def filter_(bot, message):
         username = me.username
         result, btn = await get_result(search, page_no, user_id, username, chat_id)
 
-        if result:
-            if btn:
-                btn_msg = await message.reply_text(
-                    f"{result}",
-                    reply_markup=InlineKeyboardMarkup(btn),
-                    link_preview_options=LinkPreviewOptions(is_disabled=True),
-                    quote=True,
-                )
+        try:
+            if result:
+                if btn:
+                    btn_msg = await message.reply_text(
+                        f"{result}",
+                        reply_markup=InlineKeyboardMarkup(btn),
+                        link_preview_options=LinkPreviewOptions(is_disabled=True),
+                        quote=True,
+                    )
+                else:
+                    btn_msg = await message.reply_text(
+                        f"{result}",
+                        link_preview_options=LinkPreviewOptions(is_disabled=True),
+                        quote=True,
+                    )
             else:
-                btn_msg = await message.reply_text(
-                    f"{result}",
-                    link_preview_options=LinkPreviewOptions(is_disabled=True),
-                    quote=True,
-                )
-        else:
-            if admin_settings.notfound_msg and admin_settings.notfound_img:
-                nf_msg = await message.reply_photo(
-                    photo=admin_settings.notfound_img,
-                    caption=admin_settings.notfound_msg,
-                    quote=True,
-                )
-            elif admin_settings.notfound_msg and not admin_settings.notfound_img:
-                nf_msg = await message.reply_text(admin_settings.notfound_msg)
-            else:
-                nf_msg = "No results found.\nOr retry with the correct spelling 🤐"
-                await message.reply_text(nf_msg)
+                if admin_settings.notfound_msg and admin_settings.notfound_img:
+                    nf_msg = await message.reply_photo(
+                        photo=admin_settings.notfound_img,
+                        caption=admin_settings.notfound_msg,
+                        quote=True,
+                    )
+                elif admin_settings.notfound_msg and not admin_settings.notfound_img:
+                    nf_msg = await message.reply_text(admin_settings.notfound_msg)
+                else:
+                    nf_msg = "No results found.\nOr retry with the correct spelling 🤐"
+                    await message.reply_text(nf_msg)
+        except ButtonDataInvalid as e:
+            LOGGER.error(btn)
+            LOGGER.error("ButtonDataInvalid: %s", str(e))
+        except Exception as e:
+            LOGGER.warning("Error occurred while sending message: %s", str(e))
 
     if admin_settings.btn_del:
         await asyncio.sleep(admin_settings.btn_del)
@@ -193,7 +199,7 @@ async def get_result(search, page_no, user_id, username, chat_id):
                 index += 1
                 btn_count += 1
                 file_id = file.file_id
-                filename = f"**{index}.** [{file.file_name}](https://t.me/{username}/?start={file_id}_{user_id}_{chat_id}) -\n`[{get_size(file.file_size)}]`"
+                filename = f"**{index}.** [{file.file_name}](https://t.me/{username}/?start={file_id}_{user_id}) -\n`[{get_size(file.file_size)}]`"
                 result += "\n" + filename
             elif list_mode == "ON":
                 index += 1
@@ -205,7 +211,7 @@ async def get_result(search, page_no, user_id, username, chat_id):
                 result += "\n" + filename
 
                 btn_kb = InlineKeyboardButton(
-                    text=f"{index}", callback_data=f"file#{file_id}#{user_id}#{chat_id}"
+                    text=f"{index}", callback_data=f"file#{file_id}#{user_id}"
                 )
 
                 if btn_count == 1 or btn_count == 6:
@@ -219,7 +225,7 @@ async def get_result(search, page_no, user_id, username, chat_id):
                 filename = f"[{get_size(file.file_size)}] {file.file_name}"
                 btn_kb = InlineKeyboardButton(
                     text=f"{filename}",
-                    callback_data=f"file#{file_id}#{user_id}#{chat_id}",
+                    callback_data=f"file#{file_id}#{user_id}",
                 )
                 btn.append([btn_kb])
 
@@ -255,27 +261,27 @@ async def get_result(search, page_no, user_id, username, chat_id):
     return None, None
 
 
-@Client.on_callback_query(filters.regex(r"^file#(.+)#(\d+)#(.+)$"))
+@Client.on_callback_query(filters.regex(r"^file#(.+)#(\d+)$"))
 async def get_files(bot, query):
     user_id = query.from_user.id
     if isinstance(query, CallbackQuery):
         org_user_id = query.data.split("#")[2]
-        chat_id = query.data.split("#")[3]
+        # chat_id = query.data.split("#")[3]
         if int(org_user_id) != int(user_id):
             await query.answer(text="Not your button")
             return
         file_id = query.data.split("#")[1]
         b_username = bot.me.username
         await query.answer(
-            url=f"https://t.me/{b_username}?start={file_id}_{user_id}_{chat_id}",
+            url=f"https://t.me/{b_username}?start={file_id}_{user_id}",
         )
         return
     elif isinstance(query, Message):
         file_query = query.text.split()[1]
         fid_sp = file_query.split("_")
-        file_id = "_".join(fid_sp[:-2])
-        org_user_id = file_query.split("_")[-2]
-        chat_id = file_query.split("_")[-1]
+        file_id = "_".join(fid_sp[:-1])
+        org_user_id = file_query.split("_")[-1]
+        # chat_id = file_query.split("_")[-1]
         if int(org_user_id) != int(user_id):
             await query.reply_text(text="Not your button")
             return
