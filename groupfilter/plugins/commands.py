@@ -9,7 +9,7 @@ from groupfilter.db.broadcast_sql import add_user
 from groupfilter.utils.constants import STARTMSG, HELPMSG
 from groupfilter import LOGGER, ADMINS, START_MSG, HELP_MSG, START_KB, HELP_KB
 from groupfilter.utils.util_support import humanbytes, get_db_size
-from groupfilter.plugins.serve import get_files
+from groupfilter.plugins.serve import get_files, filter_
 
 
 @Client.on_message(filters.command(["start"]))
@@ -35,7 +35,12 @@ async def start(bot, update):
             reply_markup=START_KB,
         )
     elif len(update.command) == 2:
-        await get_files(bot, update)
+        src = update.command[1].split("_")
+        if src[0] == "search":
+            term = update.command[1].split("search_", 1)[-1].replace("_", " ")
+            await filter_(bot, update, search=term)
+        else:
+            await get_files(bot, update)
 
 
 @Client.on_message(filters.command(["help"]))

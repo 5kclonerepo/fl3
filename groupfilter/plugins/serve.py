@@ -44,12 +44,13 @@ scheduler.start()
 @Client.on_message(
     ~filters.regex(r"^\/") & filters.text & filters.group & filters.incoming
 )
-async def filter_(bot, message):
+async def filter_(bot, message, search=None):
     user_id = message.from_user.id
     chat_id = message.chat.id
 
-    if re.findall(r"((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", message.text):
-        return
+    if not search:
+        if re.findall(r"((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", message.text):
+            return
 
     admin_settings = await get_admin_settings()
     if admin_settings:
@@ -63,48 +64,59 @@ async def filter_(bot, message):
             quote=True,
         )
         return
-
-    if 2 < len(message.text) < 100:
+    
+    src = None
+    if search:
+        src = await message.reply_text(
+            text=f"⏳ Searching for `{search}`",
+            quote=True,
+        )
+    elif 2 < len(message.text) < 100:
         search = message.text
-        page_no = 1
-        me = bot.me
-        username = me.username
-        result, btn = await get_result(search, page_no, user_id, username, chat_id)
+    else:
+        return
+    
+    page_no = 1
+    me = bot.me
+    username = me.username
+    result, btn = await get_result(search, page_no, user_id, username, chat_id)
 
-        btn_msg = None
-        nf_msg = None
-        try:
-            if result:
-                if btn:
-                    btn_msg = await message.reply_text(
-                        f"{result}",
-                        reply_markup=InlineKeyboardMarkup(btn),
-                        link_preview_options=LinkPreviewOptions(is_disabled=True),
-                        quote=True,
-                    )
-                else:
-                    btn_msg = await message.reply_text(
-                        f"{result}",
-                        link_preview_options=LinkPreviewOptions(is_disabled=True),
-                        quote=True,
-                    )
+    btn_msg = None
+    nf_msg = None
+    try:
+        if result:
+            if btn:
+                btn_msg = await message.reply_text(
+                    f"{result}",
+                    reply_markup=InlineKeyboardMarkup(btn),
+                    link_preview_options=LinkPreviewOptions(is_disabled=True),
+                    quote=True,
+                )
             else:
-                if admin_settings.notfound_msg and admin_settings.notfound_img:
-                    nf_msg = await message.reply_photo(
-                        photo=admin_settings.notfound_img,
-                        caption=admin_settings.notfound_msg,
-                        quote=True,
-                    )
-                elif admin_settings.notfound_msg and not admin_settings.notfound_img:
-                    nf_msg = await message.reply_text(admin_settings.notfound_msg)
-                else:
-                    nf_msg = "No results found.\nOr retry with the correct spelling 🤐"
-                    await message.reply_text(nf_msg)
-        except ButtonDataInvalid as e:
-            LOGGER.error(btn)
-            LOGGER.error("ButtonDataInvalid: %s", str(e))
-        except Exception as e:
-            LOGGER.warning("Error occurred while sending message: %s", str(e))
+                btn_msg = await message.reply_text(
+                    f"{result}",
+                    link_preview_options=LinkPreviewOptions(is_disabled=True),
+                    quote=True,
+                )
+        else:
+            if admin_settings.notfound_msg and admin_settings.notfound_img:
+                nf_msg = await message.reply_photo(
+                    photo=admin_settings.notfound_img,
+                    caption=admin_settings.notfound_msg,
+                    quote=True,
+                )
+            elif admin_settings.notfound_msg and not admin_settings.notfound_img:
+                nf_msg = await message.reply_text(admin_settings.notfound_msg)
+            else:
+                nf_msg = "No results found.\nOr retry with the correct spelling 🤐"
+                await message.reply_text(nf_msg)
+        if src:
+            await src.delete()
+    except ButtonDataInvalid as e:
+        LOGGER.error(btn)
+        LOGGER.error("ButtonDataInvalid: %s", str(e))
+    except Exception as e:
+        LOGGER.warning("Error occurred while sending message: %s", str(e))
 
     if admin_settings.btn_del:
         run_time = datetime.now() + timedelta(seconds=int(admin_settings.btn_del))
@@ -456,4 +468,6 @@ async def del_message(chat_id: int, message_id: int, txt=None):
         if txt:
             await app.send_message(chat_id=chat_id, text=txt)
     except Exception as e:
-        LOGGER.warning("Failed to delete message: %s : %s : %s", chat_id, message_id, str(e))
+        LOGGER.warning(
+            "Failed to delete message: %s : %s : %s", chat_id, message_id, str(e)
+        )
