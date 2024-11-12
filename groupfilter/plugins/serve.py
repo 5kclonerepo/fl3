@@ -8,15 +8,19 @@ from pyrogram.types import (
     CallbackQuery,
     LinkPreviewOptions,
     ChatJoinRequest,
-    ChatMemberUpdated
+    ChatMemberUpdated,
 )
 from pyrogram.enums import ParseMode
-from pyrogram.errors.exceptions.bad_request_400 import MessageNotModified, ButtonDataInvalid
+from pyrogram.errors.exceptions.bad_request_400 import (
+    MessageNotModified,
+    ButtonDataInvalid,
+)
 from groupfilter.plugins.fsub import check_fsub
 from groupfilter.db.files_sql import (
     get_filter_results,
     get_file_details,
     get_precise_filter_results,
+    redis_client,
 )
 from groupfilter.db.settings_sql import (
     get_search_settings,
@@ -24,7 +28,7 @@ from groupfilter.db.settings_sql import (
 )
 from groupfilter.db.ban_sql import is_banned
 from groupfilter.db.filters_sql import is_filter
-from groupfilter import LOGGER
+from groupfilter import LOGGER, ADMINS
 
 
 @Client.on_message(
@@ -144,40 +148,19 @@ async def pages(bot, query):
 
 async def get_result(search, page_no, user_id, username, chat_id):
     search_settings = await get_search_settings(chat_id)
-    if search_settings:
-        if search_settings.precise_mode:
-            files, count = await get_precise_filter_results(query=search, page=page_no)
-            precise_search = "Enabled"
-        else:
-            files, count = await get_filter_results(query=search, page=page_no)
-            precise_search = "Disabled"
+
+    if search_settings and search_settings.precise_mode:
+        files = await get_precise_filter_results(query=search, page=page_no)
+        precise_search = "Enabled"
     else:
-        files, count = await get_filter_results(query=search, page=page_no)
+        files = await get_filter_results(query=search, page=page_no)
         precise_search = "Disabled"
 
-    if search_settings:
-        if search_settings.button_mode:
-            button_mode = "ON"
-        else:
-            button_mode = "OFF"
-    else:
-        button_mode = "OFF"
+    count = int(files["total_count"])
 
-    if search_settings:
-        if search_settings.link_mode:
-            link_mode = "ON"
-        else:
-            link_mode = "OFF"
-    else:
-        link_mode = "OFF"
-
-    if search_settings:
-        if search_settings.list_mode:
-            list_mode = "ON"
-        else:
-            list_mode = "OFF"
-    else:
-        list_mode = "OFF"
+    button_mode = "ON" if search_settings and search_settings.button_mode else "OFF"
+    link_mode = "ON" if search_settings and search_settings.link_mode else "OFF"
+    list_mode = "ON" if search_settings and search_settings.list_mode else "OFF"
 
     if list_mode == "ON" and link_mode == "OFF":
         search_md = "List Button"
@@ -186,7 +169,7 @@ async def get_result(search, page_no, user_id, username, chat_id):
     else:
         search_md = "Button"
 
-    if files:
+    if files["files"]:
         btn = []
         index = (page_no - 1) * 10
         crnt_pg = index // 10 + 1
@@ -194,20 +177,19 @@ async def get_result(search, page_no, user_id, username, chat_id):
         btn_count = 0
         result = f"**Search Query:** `{search}`\n**Total Results:** `{count}`\n**Page:** `{crnt_pg}/{tot_pg}`\n"
         page = page_no
-        for file in files:
+
+        for file in files["files"]:
             if link_mode == "ON":
                 index += 1
                 btn_count += 1
-                file_id = file.file_id
-                filename = f"**{index}.** [{file.file_name}](https://t.me/{username}/?start={file_id}_{user_id}) -\n`[{get_size(file.file_size)}]`"
+                file_id = file["file_id"]
+                filename = f"**{index}.** [{file['file_name']}](https://t.me/{username}/?start={file_id}_{user_id}) -\n`[{get_size(file['file_size'])}]`"
                 result += "\n" + filename
             elif list_mode == "ON":
                 index += 1
                 btn_count += 1
-                file_id = file.file_id
-                filename = (
-                    f"**{index}.** `{file.file_name}` - `[{get_size(file.file_size)}]`"
-                )
+                file_id = file["file_id"]
+                filename = f"**{index}.** `{file['file_name']}` - `[{get_size(file['file_size'])}]`"
                 result += "\n" + filename
 
                 btn_kb = InlineKeyboardButton(
@@ -221,10 +203,10 @@ async def get_result(search, page_no, user_id, username, chat_id):
                 else:
                     btn[1].append(btn_kb)
             else:
-                file_id = file.file_id
-                filename = f"[{get_size(file.file_size)}] {file.file_name}"
+                file_id = file["file_id"]
+                filename = f"[{get_size(file['file_size'])}] {file['file_name']}"
                 btn_kb = InlineKeyboardButton(
-                    text=f"{filename}",
+                    text=filename,
                     callback_data=f"file#{file_id}#{user_id}",
                 )
                 btn.append([btn_kb])
@@ -252,7 +234,7 @@ async def get_result(search, page_no, user_id, username, chat_id):
         if list_mode == "ON":
             result += "\n🔻__Tap on the corresponding file number button and then start to download.__🔻"
         elif link_mode == "ON":
-            result += "\n\n__Tap on the file name and then start to download.__"
+            result += "\n__Tap on the file name and then start to download.__"
         else:
             result += "\n🔻__Tap on the file button and then start to download.__🔻"
 
@@ -408,3 +390,12 @@ def get_size(size):
         i += 1
         size /= 1024.0
     return f"{size:.2f} {units[i]}"
+
+
+@Client.on_message(
+    filters.private & filters.command(["clearcache"]) & filters.user(ADMINS)
+)
+async def clear_cache(bot, message):
+    redis_client.flushdb()
+    LOGGER.warning("Redis cache cleared")
+    await message.reply_text("Redis cache cleared", quote=True)

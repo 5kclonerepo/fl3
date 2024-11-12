@@ -1,4 +1,6 @@
 import threading
+import redis
+import json
 from sqlalchemy import create_engine, or_, func, and_
 from sqlalchemy import Column, TEXT, Numeric
 from sqlalchemy.ext.declarative import declarative_base
@@ -8,8 +10,14 @@ from sqlalchemy.pool import StaticPool
 from groupfilter import DB_URL, LOGGER
 from groupfilter.utils.helpers import unpack_new_file_id
 
-
 BASE = declarative_base()
+
+redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+try:
+    redis_client.config_set("maxmemory", "200mb")
+    redis_client.config_set("maxmemory-policy", "allkeys-lru")
+except Exception as e:
+    LOGGER.warning("Error occurred while setting Redis configuration: %s", str(e))
 
 
 class Files(BASE):
@@ -81,19 +89,25 @@ async def save_file(media):
             return False
 
 
+def cache_key(query, page, per_page):
+    return f"search:{query.lower()}:{page}:{per_page}"
+
+
 async def get_filter_results(query, page=1, per_page=10):
+    key = cache_key(query, page, per_page)
+    cached_result = redis_client.get(key)
+    if cached_result:
+        return json.loads(cached_result)
     try:
         with INSERTION_LOCK:
             offset = (page - 1) * per_page
             search = query.split()
-            conditions = []
-            for word in search:
-                conditions.append(
-                    or_(
-                        Files.file_name.ilike(f"%{word}%"),
-                        Files.caption.ilike(f"%{word}%"),
-                    )
+            conditions = [
+                or_(
+                    Files.file_name.ilike(f"%{word}%"), Files.caption.ilike(f"%{word}%")
                 )
+                for word in search
+            ]
             combined_condition = and_(*conditions)
             files_query = (
                 SESSION.query(Files)
@@ -102,25 +116,46 @@ async def get_filter_results(query, page=1, per_page=10):
             )
             total_count = files_query.count()
             files = files_query.offset(offset).limit(per_page).all()
-            return files, total_count
+
+            result = {
+                "files": [
+                    {
+                        "file_name": file.file_name,
+                        "file_id": file.file_id,
+                        "file_ref": file.file_ref,
+                        "file_size": str(file.file_size),
+                        "file_type": file.file_type,
+                        "mime_type": file.mime_type,
+                        "caption": file.caption,
+                    }
+                    for file in files
+                ],
+                "total_count": total_count,
+            }
+
+            redis_client.setex(key, 86400, json.dumps(result))
+            return result
     except Exception as e:
         LOGGER.warning("Error occurred while retrieving filter results: %s", str(e))
-        return [], 0
+        return {"files": [], "total_count": 0}
 
 
 async def get_precise_filter_results(query, page=1, per_page=10):
+    key = cache_key(query, page, per_page)
+    cached_result = redis_client.get(key)
+    if cached_result:
+        return json.loads(cached_result)
     try:
         with INSERTION_LOCK:
             offset = (page - 1) * per_page
             search = query.split()
-            conditions = []
-            for word in search:
-                conditions.append(
-                    or_(
-                        func.concat(" ", Files.file_name, " ").ilike(f"% {word} %"),
-                        func.concat(" ", Files.caption, " ").ilike(f"% {word} %"),
-                    )
+            conditions = [
+                or_(
+                    func.concat(" ", Files.file_name, " ").ilike(f"% {word} %"),
+                    func.concat(" ", Files.caption, " ").ilike(f"% {word} %"),
                 )
+                for word in search
+            ]
             combined_condition = and_(*conditions)
             files_query = (
                 SESSION.query(Files)
@@ -129,10 +164,30 @@ async def get_precise_filter_results(query, page=1, per_page=10):
             )
             total_count = files_query.count()
             files = files_query.offset(offset).limit(per_page).all()
-            return files, total_count
+
+            result = {
+                "files": [
+                    {
+                        "file_name": file.file_name,
+                        "file_id": file.file_id,
+                        "file_ref": file.file_ref,
+                        "file_size": str(file.file_size),
+                        "file_type": file.file_type,
+                        "mime_type": file.mime_type,
+                        "caption": file.caption,
+                    }
+                    for file in files
+                ],
+                "total_count": total_count,
+            }
+
+            redis_client.setex(key, 86400, json.dumps(result))
+            return result
     except Exception as e:
-        LOGGER.warning("Error occurred while retrieving filter results: %s", str(e))
-        return [], 0
+        LOGGER.warning(
+            "Error occurred while retrieving precise filter results: %s", str(e)
+        )
+        return {"files": [], "total_count": 0}
 
 
 async def get_file_details(file_id):

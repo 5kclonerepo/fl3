@@ -12,7 +12,9 @@ from groupfilter.db.fsub_sql import (
 )
 
 
-async def check_fsub(bot, message, force_sub, link, request, user_id, file_id, admin_settings):
+async def check_fsub(
+    bot, message, force_sub, link, request, user_id, file_id, admin_settings
+):
     if admin_settings:
         if admin_settings.fsub_msg:
             fsub_msg = admin_settings.fsub_msg
@@ -20,7 +22,7 @@ async def check_fsub(bot, message, force_sub, link, request, user_id, file_id, a
         else:
             txt = "**Please join below channel to get file!**"
         if admin_settings.fsub_img:
-            fsub_img = admin_settings.fsub_img         
+            fsub_img = admin_settings.fsub_img
     try:
         user = await bot.get_chat_member(int(force_sub), user_id)
         if user.status == ChatMemberStatus.BANNED:
@@ -49,20 +51,20 @@ async def check_fsub(bot, message, force_sub, link, request, user_id, file_id, a
         if admin_settings:
             if admin_settings.fsub_msg and admin_settings.fsub_img:
                 await message.reply_photo(
-                photo=fsub_img,
-                caption=txt,
-                reply_markup=kb,
-                parse_mode=ParseMode.MARKDOWN,
-                quote=True,
+                    photo=fsub_img,
+                    caption=txt,
+                    reply_markup=kb,
+                    parse_mode=ParseMode.MARKDOWN,
+                    quote=True,
                 )
                 return False
             elif admin_settings.fsub_msg and not admin_settings.fsub_img:
                 await message.reply_text(
-                text=txt,
-                reply_markup=kb,
-                parse_mode=ParseMode.MARKDOWN,
-                quote=True,
-            )        
+                    text=txt,
+                    reply_markup=kb,
+                    parse_mode=ParseMode.MARKDOWN,
+                    quote=True,
+                )
             return False
         else:
             await message.reply_text(txt, reply_markup=kb, quote=True)

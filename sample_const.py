@@ -59,11 +59,11 @@ __You can just forward the message from database channel for starting indexing, 
 ‣/forcesub - __Set force subscribe channel__ - `/forcesub channel_id/off` __or__ `/forcesub channel_id request`(for request channel) __Bot must be admin of that channel (Bot will create a new invite link for that channel)__
 ‣/checklink - __Check invite link for force subscribe channel__
 ‣/infomsg - __Set info message before sending file__ - `/infomsg message/off`
-‣/infopic - __Set info image before sending file__ - Reply `/infopic` to an image to set or  `/infopic off` to remove
+‣/infoimg - __Set info image before sending file__ - Reply `/infoimg` to an image to set or  `/infoimg off` to remove
 ‣/delmsg - __Set delete message after sending file (File auto delete needs to be enabled to work)__ - `/delmsg message/off`
-‣/delpic - __Set delete image after sending file (File auto delete needs to be enabled to work)__ - Reply `/delpic` to an image to set or  `/delpic off` to remove
+‣/delimg - __Set delete image after sending file (File auto delete needs to be enabled to work)__ - Reply `/delimg` to an image to set or  `/delimg off` to remove
 ‣/notfoundmsg - __Set message to send when file not found__ - `/notfoundmsg message/off`
-‣/notfoundpic - __Set image to send when file not found__ - Reply `/notfoundimg` to an image to set or  `/notfoundimg off` to remove
+‣/notfoundimg - __Set image to send when file not found__ - Reply `/notfoundimg` to an image to set or  `/notfoundimg off` to remove
 ‣/fsubmsg - __Set force subscribe message__ - `/fsubmsg message/off`
 ‣/fsubimg - __Set force subscribe image__ - Reply `/fsubimg` to an image to set or  `/fsubimg off` to remove
 ‣/total - __Get count of total files in DB__

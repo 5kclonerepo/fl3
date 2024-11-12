@@ -382,6 +382,7 @@ async def set_button_delete(dur):
     except Exception as e:
         LOGGER.warning("Error setting button delete: %s ", str(e))
 
+
 async def set_join_request(request):
     try:
         with INSERTION_LOCK:
@@ -397,8 +398,8 @@ async def set_join_request(request):
 
     except Exception as e:
         LOGGER.warning("Error setting join request: %s ", str(e))
-        
-        
+
+
 async def set_fsub_msg(message):
     try:
         with INSERTION_LOCK:

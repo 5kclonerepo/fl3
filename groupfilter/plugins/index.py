@@ -5,6 +5,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from groupfilter import ADMINS, LOGGER
 from groupfilter.db.files_sql import save_file, delete_file
 from groupfilter.utils.helpers import edit_caption
+from groupfilter.plugins.serve import clear_cache
 
 
 lock = asyncio.Lock()
@@ -106,6 +107,7 @@ async def index(bot, query):
                     counter -= 200
                 if current == total:
                     break
+                await clear_cache(bot, message)
 
         except Exception as e:
             LOGGER.exception(e)

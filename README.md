@@ -38,7 +38,7 @@ Required Variables
 
 ```bash
 # Install postgresql:
-sudo apt-get update && sudo apt-get install postgresql
+sudo apt-get update && sudo apt-get install postgresql && sudo apt-get install redis-server 
 
 # Change to the postgres user:
 sudo su - postgres

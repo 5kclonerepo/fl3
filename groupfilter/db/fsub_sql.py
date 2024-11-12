@@ -72,9 +72,7 @@ async def is_req_user(user_id, chat_id):
         session = SESSION()
         try:
             fltr = (
-                session.query(FsubReq)
-                .filter_by(user_id=user_id, chat_id=chat_id)
-                .one()
+                session.query(FsubReq).filter_by(user_id=user_id, chat_id=chat_id).one()
             )
             return fltr
         except NoResultFound:

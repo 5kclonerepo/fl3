@@ -138,7 +138,7 @@ async def admin_settings_(bot, update):
 
     if not invite_link:
         invite_link = "Disabled"
-        
+
     if join_req:
         join_req = "Enabled"
     else:
@@ -177,7 +177,7 @@ async def admin_settings_(bot, update):
         btn_del = f"{btn_del} seconds"
     else:
         btn_del = "Disabled"
-        
+
     if not fsub_msg:
         fsub_msg = "Disabled"
 
@@ -185,7 +185,6 @@ async def admin_settings_(bot, update):
         fsub_img = "Enabled"
     else:
         fsub_img = "Disabled"
-
 
     await bot.send_message(
         chat_id=user_id,
@@ -314,7 +313,9 @@ async def force_sub(bot, update):
     await set_channel_link(inv_link)
     await set_force_sub(int(channel))
     await set_join_request(request)
-    await update.reply_text(f"Force Subscription channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: {request}")
+    await update.reply_text(
+        f"Force Subscription channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: {request}"
+    )
 
 
 @Client.on_message(
@@ -399,7 +400,7 @@ async def set_del_msg_(bot, update):
 
 
 @Client.on_message(
-    filters.private & filters.command(["infopic"]) & filters.user(ADMINS)
+    filters.private & filters.command(["infoimg"]) & filters.user(ADMINS)
 )
 async def set_info_img_(bot, message):
     data = message.text.split()
@@ -411,7 +412,7 @@ async def set_info_img_(bot, message):
             await message.reply_text("Info image removed successfully.", quote=True)
         else:
             await message.reply_text(
-                "Please send in proper format `/infopic off` or reply /infopic to an image to set",
+                "Please send in proper format `/infoimg off` or reply /infoimg to an image to set",
                 quote=True,
             )
     else:
@@ -437,7 +438,7 @@ async def set_info_img_(bot, message):
             )
 
 
-@Client.on_message(filters.private & filters.command(["delpic"]) & filters.user(ADMINS))
+@Client.on_message(filters.private & filters.command(["delimg"]) & filters.user(ADMINS))
 async def set_del_img_(bot, message):
     data = message.text.split()
     msg = " ".join(data[1:])
@@ -448,7 +449,7 @@ async def set_del_img_(bot, message):
             await message.reply_text("Delete image removed successfully.", quote=True)
         else:
             await message.reply_text(
-                "Please send in proper format `/delpic off` or reply /delpic to an image to set",
+                "Please send in proper format `/delimg off` or reply /delimg to an image to set",
                 quote=True,
             )
     else:
@@ -495,7 +496,7 @@ async def set_unavail_msg_(bot, update):
 
 
 @Client.on_message(
-    filters.private & filters.command(["notfoundpic"]) & filters.user(ADMINS)
+    filters.private & filters.command(["notfoundimg"]) & filters.user(ADMINS)
 )
 async def set_unavail_img_(bot, message):
     data = message.text.split()
@@ -509,7 +510,7 @@ async def set_unavail_img_(bot, message):
             )
         else:
             await message.reply_text(
-                "Please send in proper format `/notfoundpic off` or reply /notfoundpic to an image to set",
+                "Please send in proper format `/notfoundimg off` or reply /notfoundimg to an image to set",
                 quote=True,
             )
     else:
@@ -536,6 +537,7 @@ async def set_unavail_img_(bot, message):
                 "Error adding Not found image, please contact support.", quote=True
             )
 
+
 @Client.on_message(
     filters.private & filters.command(["fsubmsg"]) & filters.user(ADMINS)
 )
@@ -551,9 +553,7 @@ async def set_fsub_msg_(bot, update):
         else:
             await update.reply_text("Fsub message disabled")
     else:
-        await update.reply_text(
-            "Please send in proper format `/fsubmsg message/off`"
-        )
+        await update.reply_text("Please send in proper format `/fsubmsg message/off`")
 
 
 @Client.on_message(
@@ -566,9 +566,7 @@ async def set_fsub_img_(bot, message):
         if msg.lower() == "off":
             msg = None
             await set_fsub_img(msg)
-            await message.reply_text(
-                "Fsub image removed successfully.", quote=True
-            )
+            await message.reply_text("Fsub image removed successfully.", quote=True)
         else:
             await message.reply_text(
                 "Please send in proper format `/fsubimg off` or reply /fsubimg to an image to set",
@@ -590,13 +588,12 @@ async def set_fsub_img_(bot, message):
             )
             return
         if image:
-            await message.reply_text(
-                "Fsub image updated successfully.", quote=True
-            )
+            await message.reply_text("Fsub image updated successfully.", quote=True)
         else:
             await message.reply_text(
                 "Error adding Fsub image, please contact support.", quote=True
             )
+
 
 @Client.on_message(
     filters.private & filters.command(["buttondel"]) & filters.user(ADMINS)

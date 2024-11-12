@@ -10,6 +10,7 @@ from groupfilter.db.fsub_sql import (
     is_reg_user,
 )
 
+
 @Client.on_chat_join_request()
 async def new_join_req(bot, update):
     chat_id = update.chat.id
@@ -29,7 +30,7 @@ async def new_join_req(bot, update):
                 await rem_fsub_req_file(user_id, chat_id)
             else:
                 LOGGER.info(
-                    "Unable to find user details from db: %s : %s",
+                    "Unable to find user details from db: %s : %s. Skipping file send.",
                     str(chat_id),
                     str(user_id),
                 )
@@ -43,7 +44,7 @@ async def new_joins(bot, update):
         user_id = update.new_chat_member.user.id
     except AttributeError:
         return
-    chat_id = update.chat.id    
+    chat_id = update.chat.id
     fsub = None
     admin_settings = await get_admin_settings()
     if admin_settings:
@@ -83,7 +84,7 @@ async def on_status_change(bot, update):
         old_status = old_chat_member.status
     except AttributeError:
         old_status = None
-        
+
     try:
         new_status = new_chat_member.status
     except AttributeError:
