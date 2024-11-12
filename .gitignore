@@ -167,3 +167,4 @@ groupfilter.session-shm
 groupfilter.session-wal
 groupfilter.session-journal
 .vscode/settings.json
+jobs.sqlite

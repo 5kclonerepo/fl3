@@ -4,11 +4,10 @@ import logging
 import logging.config
 from dotenv import load_dotenv
 
-
 load_dotenv(override=True)
 
-
 id_pattern = re.compile(r"^.\d+$")
+
 
 # vars
 APP_ID = os.environ.get("APP_ID", "")
@@ -40,3 +39,4 @@ HELP_KB = const.HELP_KB
 logging.config.fileConfig(fname="config.ini", disable_existing_loggers=False)
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
+logging.getLogger("apscheduler").setLevel(logging.WARNING)

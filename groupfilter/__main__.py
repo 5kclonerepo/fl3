@@ -6,7 +6,11 @@ from groupfilter import APP_ID, API_HASH, BOT_TOKEN
 uvloop.install()
 
 
+app = None
+
+
 async def main():
+    global app
     plugins = dict(root="groupfilter/plugins")
     app = Client(
         name="groupfilter",

@@ -1,5 +1,8 @@
 import re
-import asyncio
+from datetime import datetime, timedelta
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.triggers.date import DateTrigger
 from pyrogram import Client, filters
 from pyrogram.types import (
     InlineKeyboardButton,
@@ -14,6 +17,7 @@ from pyrogram.enums import ParseMode
 from pyrogram.errors.exceptions.bad_request_400 import (
     MessageNotModified,
     ButtonDataInvalid,
+    QueryIdInvalid,
 )
 from groupfilter.plugins.fsub import check_fsub
 from groupfilter.db.files_sql import (
@@ -29,6 +33,12 @@ from groupfilter.db.settings_sql import (
 from groupfilter.db.ban_sql import is_banned
 from groupfilter.db.filters_sql import is_filter
 from groupfilter import LOGGER, ADMINS
+from __main__ import app
+
+
+jobstores = {"default": SQLAlchemyJobStore(url="sqlite:///jobs.sqlite")}
+scheduler = AsyncIOScheduler(jobstores=jobstores)
+scheduler.start()
 
 
 @Client.on_message(
@@ -61,6 +71,8 @@ async def filter_(bot, message):
         username = me.username
         result, btn = await get_result(search, page_no, user_id, username, chat_id)
 
+        btn_msg = None
+        nf_msg = None
         try:
             if result:
                 if btn:
@@ -95,9 +107,24 @@ async def filter_(bot, message):
             LOGGER.warning("Error occurred while sending message: %s", str(e))
 
     if admin_settings.btn_del:
-        await asyncio.sleep(admin_settings.btn_del)
-        await btn_msg.delete()
-        await nf_msg.delete()
+        run_time = datetime.now() + timedelta(seconds=int(admin_settings.btn_del))
+        trigger = DateTrigger(run_date=run_time)
+        if btn_msg:
+            scheduler.add_job(
+                del_message,
+                trigger,
+                args=[btn_msg.chat.id, btn_msg.id],
+                max_instances=500000,
+                misfire_grace_time=200,
+            )
+        if nf_msg:
+            scheduler.add_job(
+                del_message,
+                trigger,
+                args=[nf_msg.chat.id, nf_msg.id],
+                max_instances=500000,
+                misfire_grace_time=200,
+            )
 
 
 @Client.on_callback_query(filters.regex(r"^(nxt_pg|prev_pg) \d+ \d+ .+$"))
@@ -254,9 +281,12 @@ async def get_files(bot, query):
             return
         file_id = query.data.split("#")[1]
         b_username = bot.me.username
-        await query.answer(
-            url=f"https://t.me/{b_username}?start={file_id}_{user_id}",
-        )
+        try:
+            await query.answer(
+                url=f"https://t.me/{b_username}?start={file_id}_{user_id}",
+            )
+        except QueryIdInvalid:
+            await query.message.edit_text("Please search again")
         return
     elif isinstance(query, Message):
         file_query = query.text.split()[1]
@@ -372,13 +402,32 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     disc = await bot.send_message(user_id, del_msg)
                 else:
                     disc = await msg.reply_text(del_msg)
-            await asyncio.sleep(delay_dur)
+            run_time = datetime.now() + timedelta(seconds=int(delay_dur))
+            trigger = DateTrigger(run_date=run_time)
             if info:
-                await info.delete()
-            await msg.delete()
-            await disc.delete()
-            await bot.send_message(user_id, "File has been deleted")
-        except Exception as e:
+                scheduler.add_job(
+                    del_message,
+                    trigger,
+                    args=[info.chat.id, info.id],
+                    max_instances=500000,
+                    misfire_grace_time=100,
+                )
+            txt = "File has been deleted"
+            scheduler.add_job(
+                del_message,
+                trigger,
+                args=[msg.chat.id, msg.id, txt],
+                max_instances=500000,
+                misfire_grace_time=100,
+            )
+            scheduler.add_job(
+                del_message,
+                trigger,
+                args=[disc.chat.id, disc.id],
+                max_instances=500000,
+                misfire_grace_time=200,
+            )
+        except AttributeError as e:
             LOGGER.warning("Error occurred while deleting file: %s", str(e))
 
 
@@ -396,6 +445,15 @@ def get_size(size):
     filters.private & filters.command(["clearcache"]) & filters.user(ADMINS)
 )
 async def clear_cache(bot, message):
-    redis_client.flushdb()
-    LOGGER.warning("Redis cache cleared")
-    await message.reply_text("Redis cache cleared", quote=True)
+    redis_client.flushall()
+    LOGGER.warning("Stored cache cleared")
+    await message.reply_text("Stored cache cleared", quote=True)
+
+
+async def del_message(chat_id: int, message_id: int, txt=None):
+    try:
+        await app.delete_messages(chat_id=chat_id, message_ids=message_id)
+        if txt:
+            await app.send_message(chat_id=chat_id, text=txt)
+    except Exception as e:
+        LOGGER.warning("Failed to delete message: %s : %s : %s", chat_id, message_id, str(e))

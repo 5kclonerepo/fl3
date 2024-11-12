@@ -1,6 +1,6 @@
 APScheduler
 greenlet==3.0.3
-psutil==5.9.8
+psutil
 psycopg2-binary==2.9.9
 pyaes==1.6.1
 pymediainfo
