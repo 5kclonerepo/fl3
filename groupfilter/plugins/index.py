@@ -144,18 +144,18 @@ async def index_files_task(bot, msg, chat_id, start_msg_id, last_msg_id):
 
                 try:
                     for file_type in ("document", "video", "audio"):
-                        media = getattr(message, file_type, None)
-                        if not media:
+                        media = getattr(message, file_type, None)                      
+                        if media:
+                            caption = message.caption
+                            file_name = media.file_name
+                            file_name = edit_caption(file_name)
+                            media.file_type = file_type
+                            media.caption = caption or file_name
+                            save = await save_file(media)
+                            if save:
+                                saved += 1
+                            total_files += 1
                             break
-                        caption = message.caption
-                        file_name = media.file_name
-                        file_name = edit_caption(file_name)
-                        media.file_type = file_type
-                        media.caption = caption or file_name
-                        save = await save_file(media)
-                        if save:
-                            saved += 1
-                        total_files += 1
                 except Exception as e:
                     LOGGER.warning("Error occurred while saving file: %s", str(e))
 
