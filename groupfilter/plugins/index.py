@@ -92,7 +92,6 @@ async def index(bot, query):
                         total_files += 1
                 except Exception as e:
                     LOGGER.warning("Error occurred while saving file: %s", str(e))
-                await asyncio.sleep(0.1)
 
                 current += 1
                 counter += 1

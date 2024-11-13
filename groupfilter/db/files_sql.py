@@ -2,7 +2,7 @@ import threading
 import redis
 import json
 from sqlalchemy import create_engine, or_, func, and_
-from sqlalchemy import Column, TEXT, Numeric
+from sqlalchemy import Column, TEXT, Numeric, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.orm.exc import NoResultFound
@@ -22,7 +22,8 @@ except Exception as e:
 
 class Files(BASE):
     __tablename__ = "files"
-    file_name = Column(TEXT, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    file_name = Column(TEXT)
     file_id = Column(TEXT)
     file_ref = Column(TEXT)
     file_size = Column(Numeric)
