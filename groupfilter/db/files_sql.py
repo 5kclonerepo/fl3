@@ -9,6 +9,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.pool import StaticPool
 from groupfilter import DB_URL, LOGGER
 from groupfilter.utils.helpers import unpack_new_file_id
+from sqlalchemy import Index
+from sqlalchemy.dialects.postgresql import TSVECTOR
 
 BASE = declarative_base()
 
@@ -30,9 +32,18 @@ class Files(BASE):
     file_type = Column(TEXT)
     mime_type = Column(TEXT)
     caption = Column(TEXT)
+    search_vector = Column(TSVECTOR)
 
     def __init__(
-        self, file_name, file_id, file_ref, file_size, file_type, mime_type, caption
+        self,
+        file_name,
+        file_id,
+        file_ref,
+        file_size,
+        file_type,
+        mime_type,
+        caption,
+        search_vector,
     ):
         self.file_name = file_name
         self.file_id = file_id
@@ -41,6 +52,13 @@ class Files(BASE):
         self.file_type = file_type
         self.mime_type = mime_type
         self.caption = caption
+        self.search_vector = search_vector
+
+    def __repr__(self):
+        return f"<File(file_name={self.file_name}, file_id={self.file_id})>"
+
+
+Index("idx_files_search_vector", Files.search_vector, postgresql_using="gin")
 
 
 def start() -> scoped_session:
@@ -65,6 +83,12 @@ async def save_file(media):
                 file = SESSION.query(Files).filter_by(file_name=media.file_name).one()
                 LOGGER.warning("%s is already saved in the database", media.file_name)
             except NoResultFound:
+                search_vector = func.to_tsvector(
+                    "english",
+                    func.coalesce(media.file_name, "")
+                    + " "
+                    + func.coalesce(media.caption, ""),
+                )
                 file = Files(
                     file_name=media.file_name,
                     file_id=file_id,
@@ -73,6 +97,7 @@ async def save_file(media):
                     file_type=media.file_type,
                     mime_type=media.mime_type,
                     caption=media.caption if media.caption else None,
+                    search_vector=search_vector,
                 )
                 LOGGER.info("%s is saved in database", media.file_name)
                 SESSION.add(file)
@@ -103,19 +128,17 @@ async def get_filter_results(query, page=1, per_page=10):
         with INSERTION_LOCK:
             offset = (page - 1) * per_page
             search = query.split()
-            conditions = [
-                or_(
-                    Files.file_name.ilike(f"%{word}%"), Files.caption.ilike(f"%{word}%")
-                )
-                for word in search
-            ]
+            conditions = [Files.search_vector.match(word) for word in search]
             combined_condition = and_(*conditions)
             files_query = (
                 SESSION.query(Files)
                 .filter(combined_condition)
-                .order_by(Files.file_name)
+                .order_by(Files.id.desc())
             )
-            total_count = files_query.count()
+            total_count_query = SESSION.query(func.count(Files.file_id)).filter(
+                combined_condition
+            )
+            total_count = total_count_query.scalar()
             files = files_query.offset(offset).limit(per_page).all()
 
             result = {
@@ -133,7 +156,6 @@ async def get_filter_results(query, page=1, per_page=10):
                 ],
                 "total_count": total_count,
             }
-
             redis_client.setex(key, 86400, json.dumps(result))
             return result
     except Exception as e:
@@ -150,20 +172,19 @@ async def get_precise_filter_results(query, page=1, per_page=10):
         with INSERTION_LOCK:
             offset = (page - 1) * per_page
             search = query.split()
-            conditions = [
-                or_(
-                    func.concat(" ", Files.file_name, " ").ilike(f"% {word} %"),
-                    func.concat(" ", Files.caption, " ").ilike(f"% {word} %"),
-                )
-                for word in search
-            ]
+
+            conditions = [Files.search_vector.match(f'"{word}"') for word in search]
             combined_condition = and_(*conditions)
+
             files_query = (
                 SESSION.query(Files)
                 .filter(combined_condition)
-                .order_by(Files.file_name)
+                .order_by(Files.id.desc())
             )
-            total_count = files_query.count()
+            total_count_query = SESSION.query(func.count(Files.file_id)).filter(
+                combined_condition
+            )
+            total_count = total_count_query.scalar()
             files = files_query.offset(offset).limit(per_page).all()
 
             result = {
@@ -181,13 +202,10 @@ async def get_precise_filter_results(query, page=1, per_page=10):
                 ],
                 "total_count": total_count,
             }
-
             redis_client.setex(key, 86400, json.dumps(result))
             return result
     except Exception as e:
-        LOGGER.warning(
-            "Error occurred while retrieving precise filter results: %s", str(e)
-        )
+        LOGGER.warning("Error occurred while retrieving filter results: %s", str(e))
         return {"files": [], "total_count": 0}
 
 

@@ -5,6 +5,7 @@ import time
 import shutil
 from psutil import cpu_percent, virtual_memory, disk_usage
 from pyrogram import Client, filters
+from pyrogram.errors import MessageNotModified
 from groupfilter.db.broadcast_sql import add_user
 from groupfilter.utils.constants import STARTMSG, HELPMSG
 from groupfilter import LOGGER, ADMINS, START_MSG, HELP_MSG, START_KB, HELP_KB
@@ -68,7 +69,10 @@ async def back(bot, query):
     except Exception as e:
         LOGGER.warning(e)
         start_msg = STARTMSG
-    await query.message.edit_text(start_msg, reply_markup=START_KB)
+    try:
+        await query.message.edit_text(start_msg, reply_markup=START_KB)
+    except MessageNotModified:
+        pass
 
 
 @Client.on_callback_query(filters.regex(r"^help_cb$"))

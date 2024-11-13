@@ -18,6 +18,7 @@ from pyrogram.errors.exceptions.bad_request_400 import (
     MessageNotModified,
     ButtonDataInvalid,
     QueryIdInvalid,
+    MediaEmpty
 )
 from groupfilter.plugins.fsub import check_fsub
 from groupfilter.db.files_sql import (
@@ -298,7 +299,10 @@ async def get_files(bot, query):
                 url=f"https://t.me/{b_username}?start={file_id}_{user_id}",
             )
         except QueryIdInvalid:
-            await query.message.edit_text("Please search again")
+            try:
+                await query.message.edit_text("Please search again")
+            except MessageNotModified:
+                pass
         return
     elif isinstance(query, Message):
         file_query = query.text.split()[1]
@@ -369,20 +373,24 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
         else:
             info = await query.reply_text(admin_settings.info_msg)
 
-    if isinstance(query, (ChatJoinRequest, ChatMemberUpdated)):
-        msg = await bot.send_cached_media(
-            chat_id=user_id,
-            file_id=file_id,
-            caption=f_caption,
-            parse_mode=ParseMode.MARKDOWN,
-        )
-    else:
-        msg = await query.reply_cached_media(
-            file_id=file_id,
-            caption=f_caption,
-            parse_mode=ParseMode.MARKDOWN,
-            quote=True,
-        )
+    try:
+        if isinstance(query, (ChatJoinRequest, ChatMemberUpdated)):
+            msg = await bot.send_cached_media(
+                chat_id=user_id,
+                file_id=file_id,
+                caption=f_caption,
+                parse_mode=ParseMode.MARKDOWN,
+            )
+        else:
+            msg = await query.reply_cached_media(
+                file_id=file_id,
+                caption=f_caption,
+                parse_mode=ParseMode.MARKDOWN,
+                quote=True,
+            )
+    except MediaEmpty:
+        LOGGER.warning("File not found: %s", str(file_id))
+        return
 
     if admin_settings.auto_delete:
         try:
