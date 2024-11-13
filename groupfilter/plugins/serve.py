@@ -109,8 +109,8 @@ async def filter_(bot, message, search=None):
             elif admin_settings.notfound_msg and not admin_settings.notfound_img:
                 nf_msg = await message.reply_text(admin_settings.notfound_msg)
             else:
-                nf_msg = "No results found.\nOr retry with the correct spelling 🤐"
-                await message.reply_text(nf_msg)
+                msg = "No results found.\nOr retry with the correct spelling 🤐"
+                nf_msg =await message.reply_text(msg)
         if src:
             await src.delete()
     except ButtonDataInvalid as e:
