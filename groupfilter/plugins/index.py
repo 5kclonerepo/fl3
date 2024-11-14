@@ -146,7 +146,7 @@ async def index_files_task(bot, msg, chat_id, start_msg_id, last_msg_id):
                     for file_type in ("document", "video", "audio"):
                         media = getattr(message, file_type, None)                      
                         if media:
-                            caption = edit_text(message.caption) if message.caption else None
+                            caption = message.caption
                             file_name = media.file_name
                             file_name = edit_text(file_name)
                             media.file_type = file_type
@@ -163,8 +163,15 @@ async def index_files_task(bot, msg, chat_id, start_msg_id, last_msg_id):
                 counter += 1
                 if counter == 200:
                     try:
+                        kb = InlineKeyboardMarkup(
+                            [
+                                [
+                                    InlineKeyboardButton("Cancel", callback_data="cancel_index"),
+                                ]
+                            ]
+                        )
                         await msg.edit(
-                            f"Total messages fetched: {current}\nTotal messages processed: {total_files}"
+                            f"Total messages fetched: {current}\nTotal messages processed: {total_files}", reply_markup=kb
                         )
                         LOGGER.info("Total messages processed: %s", total_files)
                     except FloodWait as e:

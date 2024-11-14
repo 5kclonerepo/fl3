@@ -16,7 +16,7 @@ async def live_index(bot, message):
             media = getattr(message, file_type, None)
             caption = message.caption
             if media:
-                caption = edit_text(message.caption) if message.caption else None
+                caption = message.caption
                 file_name = media.file_name
                 file_name = edit_text(file_name)
                 media.file_type = file_type
