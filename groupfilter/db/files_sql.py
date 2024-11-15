@@ -8,24 +8,26 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.pool import StaticPool
 from groupfilter import DB_URL, LOGGER, BOT_TOKEN
-from groupfilter.utils.helpers import unpack_new_file_id
+from groupfilter.utils.helpers import unpack_new_file_id, STOP_WORDS
 from sqlalchemy import Index
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from pmfilter.db.redis import NamespacedRedis
+from groupfilter.db.redis import NamespacedRedis
 
 BASE = declarative_base()
 
 
-def get_redis_client(bot_token: str) -> NamespacedRedis:
+def get_redis_client(token: str) -> NamespacedRedis:
+    namespace = token[-10:]
     return NamespacedRedis(
-        bot_token, host="localhost", port=6379, db=0, decode_responses=True
+        namespace, host="localhost", port=6379, db=0, decode_responses=True
     )
 
 
-token = BOT_TOKEN[-10:]
+token = BOT_TOKEN[-6:]
 redis_client = get_redis_client(token)
+
 try:
-    redis_client.config_set("maxmemory", "200mb")
+    redis_client.config_set("maxmemory", "300mb")
     redis_client.config_set("maxmemory-policy", "allkeys-lru")
 except Exception as e:
     LOGGER.warning("Error occurred while setting Redis configuration: %s", str(e))
@@ -89,8 +91,16 @@ async def save_file(media):
             LOGGER.warning("%s is already saved in the database", media.file_name)
         except NoResultFound:
             try:
-                file = SESSION.query(Files).filter_by(file_name=media.file_name).one()
-                LOGGER.warning("%s is already saved in the database", media.file_name)
+                file = (
+                    SESSION.query(Files)
+                    .filter_by(file_name=media.file_name, file_size=media.file_size)
+                    .one()
+                )
+                LOGGER.warning(
+                    "%s : %s is already saved in the database",
+                    media.file_name,
+                    media.file_size,
+                )
             except NoResultFound:
                 cleaned_fn = clean_text(media.file_name) if media.file_name else ""
                 cleaned_cp = clean_text(media.caption) if media.caption else ""
@@ -125,7 +135,7 @@ async def save_file(media):
 
 
 def cache_key(query, page, per_page):
-    return f"search:{query.lower()}:{page}:{per_page}"
+    return f"search:{token}:{query.lower()}:{page}:{per_page}"
 
 
 async def get_filter_results(query, page=1, per_page=10):
@@ -140,20 +150,18 @@ async def get_filter_results(query, page=1, per_page=10):
     try:
         with INSERTION_LOCK:
             offset = (page - 1) * per_page
-            search = query.split()
-            sanitized_terms = [
-                re.sub(r"[&|!()<>:*]", "", word)
-                for word in search
-                if re.sub(r"[&|!()<>:*]", "", word)
-            ]
-            conditions = [
-                Files.search_vector.op("@@")(
-                    func.to_tsquery(f"{term}" if len(term) <= 1 else f"{term}:*")
-                )
-                for term in sanitized_terms
-            ]
+            search = [clean_query(word) for word in query.split() if clean_query(word)]
+            contains_stop_word = any(word.lower() in STOP_WORDS for word in search)
+            if contains_stop_word:
+                conditions = [Files.file_name.ilike(f"%{term}%") for term in search]
+            else:
+                conditions = [
+                    Files.search_vector.op("@@")(
+                        func.to_tsquery(f"{term}" if len(term) <= 1 else f"{term}:*")
+                    )
+                    for term in search
+                ]
             combined_condition = and_(*conditions)
-
             files_query = (
                 SESSION.query(Files)
                 .filter(combined_condition)
@@ -278,4 +286,10 @@ async def count_files():
 
 
 def clean_text(text):
-    return re.sub(r"[._]", " ", text)
+    return re.sub(r"[._\[\]{}()<>|;:'\",?!`~@#$%^&+=\\]", " ", text)
+
+
+def clean_query(query):
+    clean = re.sub(r"[&|!()<>:*._]", "", query)
+    clean = re.sub(r"^[\'\"]+", "", clean)
+    return clean

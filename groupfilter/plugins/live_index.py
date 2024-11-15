@@ -3,7 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.errors import FloodWait
 from groupfilter import DB_CHANNELS, LOGGER
 from groupfilter.db.files_sql import save_file
-from groupfilter.utils.helpers import edit_text
+from groupfilter.utils.helpers import clean_text
 from groupfilter.plugins.serve import clear_cache
 
 media_filter = filters.document | filters.video | filters.audio
@@ -18,9 +18,8 @@ async def live_index(bot, message):
             if media:
                 caption = message.caption
                 file_name = media.file_name
-                file_name = edit_text(file_name)
                 media.file_type = file_type
-                media.caption = caption or file_name
+                media.caption = clean_text(caption) or clean_text(file_name)
                 await save_file(media)
                 break
             await asyncio.sleep(0.5)

@@ -350,7 +350,8 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
             f_caption = admin_settings.custom_caption
         elif f_caption is None:
             f_caption = f"{files.file_name}"
-        f_caption = "`" + f_caption + "`"
+        # f_caption = "`" + f_caption + "`"
+        f_caption = "**" + f_caption + "**"
 
     if admin_settings.caption_uname:
         f_caption = f_caption + "\n" + admin_settings.caption_uname
