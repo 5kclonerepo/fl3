@@ -333,6 +333,43 @@ async def force_sub(bot, update):
         f"Force Subscription channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: {request}"
     )
 
+@Client.on_message(
+    filters.private & filters.command(["fsubrequest"]) & filters.user(ADMINS)
+)
+async def fsub_req(bot, update):
+    data = update.text.split()
+    if len(data) == 2:
+        req = data[-1]
+        if req.lower() == "off":
+            request = False
+        
+        channel = None
+        admin_settings = await get_admin_settings()
+        if admin_settings:
+            channel = admin_settings.fsub_channel
+            if not channel:
+                await update.reply_text("Please add fsub channel first")
+                return
+                     
+        if req.lower() != "on":
+            await update.reply_text(
+                "Please send in proper format `/fsubrequest on/off` if you want to set join request"
+            )
+            return
+        request = True
+
+    try:
+        link = await bot.create_chat_invite_link(channel, creates_join_request=request)
+        inv_link = link.invite_link
+    except Exception as e:
+        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
+        return
+
+    await set_channel_link(inv_link)
+    await set_join_request(request)
+    await update.reply_text(
+        f"Join Request set to: {request}\nInvite link: {link.invite_link}"
+    )
 
 @Client.on_message(
     filters.private & filters.command(["checklink"]) & filters.user(ADMINS)
