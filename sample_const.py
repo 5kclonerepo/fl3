@@ -52,7 +52,7 @@ __`/indexlink <last message link>` or `/indexlink <start message link> <last mes
 ‣/buttondel - __Set button message in groups auto delete time in seconds__
 ‣/repairmode - __Enable or disable repair mode - If on, bot will not send any files__
 ‣/customcaption - __Set custom caption for files__ - `/customcaption caption/off`
-‣/setusername - __Set username in file caption__ - `/setusername username/off`
+‣/setcaptionplus - __Set additional caption for files along with caption__ - `/setcaptionplus caption/off`
 ‣/adminsettings - __Get current admin settings__
 ‣/ban - __Ban a user from bot__ - `/ban user_id`
 ‣/unban - __Unban a user from bot__ - `/unban user_id`

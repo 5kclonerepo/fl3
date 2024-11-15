@@ -26,8 +26,9 @@ async def new_join_req(bot, update):
             user_det = await is_req_user(int(user_id), int(chat_id))
             if user_det:
                 file_id = user_det.fileid
-                await send_file(admin_settings, bot, update, user_id, file_id)
-                await rem_fsub_req_file(user_id, chat_id)
+                if file_id:
+                    await send_file(admin_settings, bot, update, user_id, file_id)
+                    await rem_fsub_req_file(user_id, chat_id)
             else:
                 LOGGER.info(
                     "Unable to find user details from db: %s : %s. Skipping file send.",

@@ -242,7 +242,7 @@ async def get_link():
         SESSION.close()
 
 
-async def set_username(username):
+async def set_captionplus(username):
     try:
         with INSERTION_LOCK:
             session = SESSION()

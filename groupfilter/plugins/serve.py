@@ -65,6 +65,7 @@ async def filter_(bot, message, search=None):
         await message.reply_text(
             text=fltr.message,
             quote=True,
+            parse_mode=ParseMode.MARKDOWN,
         )
         return
 
@@ -344,7 +345,7 @@ async def get_files(bot, query):
 
 async def send_file(admin_settings, bot, query, user_id, file_id):
     filedetails = await get_file_details(file_id)
-    f_caption = None
+    f_caption = ""
     for files in filedetails:
         f_caption = files.caption
         if admin_settings.custom_caption:
@@ -355,7 +356,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
         f_caption = "**" + f_caption + "**"
 
     if admin_settings.caption_uname:
-        f_caption = f_caption + "\n" + admin_settings.caption_uname
+        f_caption = f_caption + "\n\n" + "**" + admin_settings.caption_uname + "**"
 
     info = None
     if admin_settings.info_msg and admin_settings.info_img:
@@ -374,6 +375,8 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
     elif admin_settings.info_msg and not admin_settings.info_img:
         if isinstance(query, (ChatJoinRequest, ChatMemberUpdated)):
             info = await bot.send_message(user_id, admin_settings.info_msg)
+        elif isinstance(query, CallbackQuery):
+            info = await query.message.reply_text(admin_settings.info_msg)
         else:
             info = await query.reply_text(admin_settings.info_msg)
 
@@ -392,8 +395,6 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                 parse_mode=ParseMode.MARKDOWN,
                 quote=True,
             )
-        if user_id == "20516707":
-            LOGGER.info(msg)
     except MediaEmpty:
         LOGGER.warning("File not found: %s", str(file_id))
         return
@@ -410,6 +411,12 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                         chat_id=user_id,
                         photo=admin_settings.del_img,
                         caption=admin_settings.del_msg,
+                    )
+                elif isinstance(query, CallbackQuery):
+                    disc = await query.message.reply_photo(
+                        photo=admin_settings.del_img,
+                        caption=admin_settings.del_msg,
+                        quote=True,
                     )
                 else:
                     disc = await msg.reply_photo(

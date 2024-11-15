@@ -1,4 +1,4 @@
-import shlex
+import re
 from pyrogram import Client, filters
 from groupfilter.db.settings_sql import (
     get_admin_settings,
@@ -8,7 +8,7 @@ from groupfilter.db.settings_sql import (
     set_force_sub,
     set_channel_link,
     get_link,
-    set_username,
+    set_captionplus,
     set_info_msg,
     set_info_img,
     set_del_msg,
@@ -224,22 +224,38 @@ async def unbanuser(bot, update):
 
 
 @Client.on_message(
-    filters.private & filters.command(["addfilter"]) & filters.user(ADMINS)
+    filters.private & filters.command("addfilter") & filters.user(ADMINS)
 )
-async def addfilter(bot, update):
-    data = shlex.split(update.text)
-    if len(data) >= 3:
-        fltr = data[1].strip('"').lower()
-        message = " ".join(data[2:])
-        add = await add_filter(fltr, message)
-        if add:
-            await update.reply_text(f"Filter `{fltr}` added")
-        else:
-            await update.reply_text(f"Filter `{fltr}` already exists")
-    else:
-        await update.reply_text(
-            "Please send in proper format `/addfilter filter message`"
+async def addfilter(client, message):
+    command_text = message.text.split(None, 1)
+    if len(command_text) < 2:
+        await message.reply_text(
+            "Please use the correct format: `/addfilter keyword message`"
         )
+        return
+    text = command_text[1]
+    match = re.match(r'^"(.*?)"\s+(.*)', text, re.DOTALL)
+    if match:
+        filter_word = match.group(1).lower()
+        filter_text = match.group(2).strip()
+    else:
+        parts = text.split(None, 1)
+        if len(parts) < 2:
+            await message.reply_text(
+                "Please use the correct format: `/addfilter keyword message`"
+            )
+            return
+        filter_word = parts[0].lower()
+        filter_text = parts[1].strip()
+
+    if not filter_text:
+        await message.reply_text("The filter message cannot be empty.")
+        return
+    added = await add_filter(filter_word, filter_text)
+    if added:
+        await message.reply_text(f"Filter `{filter_word}` added successfully.")
+    else:
+        await message.reply_text(f"Filter `{filter_word}` already exists.")
 
 
 @Client.on_message(
@@ -332,31 +348,25 @@ async def testlink(bot, update):
 
 
 @Client.on_message(
-    filters.private & filters.command(["setusername"]) & filters.user(ADMINS)
+    filters.private & filters.command(["setcaptionplus"]) & filters.user(ADMINS)
 )
 async def caption_username(bot, update):
-    data = update.text.split()
-    if len(data) == 2:
-        username = data[-1]
-        if username.lower() == "off":
-            username = 0
-        elif username.startswith("@"):
-            username = username
-        else:
-            await update.reply_text("This is not a username, please check.")
-            return
-
-        await set_username(username)
-
-        if username:
-            await update.reply_text(f"File caption username set to `{username}`")
-        else:
-            await update.reply_text("File caption username disabled")
-
-    else:
+    command_text = update.text.split(None, 1)
+    if len(command_text) < 2:
         await update.reply_text(
-            "Please send in proper format `/setusername username/off`"
+            "Please use the correct format: `/setcaptionplus caption/off`"
         )
+        return
+    text = command_text[1]
+    captionplus = text.strip()
+
+    if captionplus.lower() == "off":
+        captionplus = None
+    await set_captionplus(captionplus)
+    if captionplus:
+        await update.reply_text(f"File additional caption set to:\n`{captionplus}`")
+    else:
+        await update.reply_text("File additional username disabled")
 
 
 @Client.on_message(filters.private & filters.command(["total"]) & filters.user(ADMINS))
@@ -368,35 +378,45 @@ async def count_f(bot, update):
 @Client.on_message(
     filters.private & filters.command(["infomsg"]) & filters.user(ADMINS)
 )
-async def set_info_msg_(bot, update):
-    data = update.text.split()
-    msg = " ".join(data[1:])
-    if len(data) >= 2:
-        if msg.lower() == "off":
-            msg = None
-        await set_info_msg(msg)
-        if msg:
-            await update.reply_text(f"Info message set to `{msg}`")
-        else:
-            await update.reply_text("Info message disabled")
+async def set_info_msg_(bot, update):    
+    command_text = update.text.split(None, 1)
+    if len(command_text) < 2:
+        await update.reply_text(
+            "Please use the correct format: `/infomsg message/off`"
+        )
+        return
+    text = command_text[1]
+    infomsg = text.strip()
+
+    if infomsg.lower() == "off":
+        infomsg = None
+    await set_info_msg(infomsg)
+    if infomsg:
+        await update.reply_text(f"Info message set to `{infomsg}`")
     else:
-        await update.reply_text("Please send in proper format `/infomsg message/off`")
+        await update.reply_text("Info message disabled")
+        
 
 
 @Client.on_message(filters.private & filters.command(["delmsg"]) & filters.user(ADMINS))
-async def set_del_msg_(bot, update):
-    data = update.text.split()
-    msg = " ".join(data[1:])
-    if len(data) >= 2:
-        if msg.lower() == "off":
-            msg = None
-        await set_del_msg(msg)
-        if msg:
+async def set_del_msg_(bot, update):    
+    command_text = update.text.split(None, 1)
+    if len(command_text) < 2:
+        await update.reply_text(
+            "Please use the correct format: `/delmsg message/off`"
+        )
+        return
+    text = command_text[1]
+    msg = text.strip()
+
+    if msg.lower() == "off":
+        msg = None
+    await set_del_msg(msg)
+    if msg:
             await update.reply_text(f"Delete message set to `{msg}`")
-        else:
-            await update.reply_text("Delete message disabled")
     else:
-        await update.reply_text("Please send in proper format `/delmsg message/off`")
+        await update.reply_text("Delete message disabled")
+        
 
 
 @Client.on_message(
@@ -479,20 +499,23 @@ async def set_del_img_(bot, message):
     filters.private & filters.command(["notfoundmsg"]) & filters.user(ADMINS)
 )
 async def set_unavail_msg_(bot, update):
-    data = update.text.split()
-    msg = " ".join(data[1:])
-    if len(data) >= 2:
-        if msg.lower() == "off":
-            msg = None
-        await set_unavail_msg(msg)
-        if msg:
-            await update.reply_text(f"Not found message set to `{msg}`")
-        else:
-            await update.reply_text("Not found message disabled")
-    else:
+    command_text = update.text.split(None, 1)
+    if len(command_text) < 2:
         await update.reply_text(
-            "Please send in proper format `/notfoundmsg message/off`"
+            "Please use the correct format: `/notfoundmsg message/off`"
         )
+        return
+    text = command_text[1]
+    msg = text.strip()
+
+    if msg.lower() == "off":
+        msg = None
+    await set_unavail_msg(msg)
+    if msg:
+            await update.reply_text(f"Not found message set to `{msg}`")
+    else:
+        await update.reply_text("Not found message disabled")
+    
 
 
 @Client.on_message(
@@ -542,19 +565,24 @@ async def set_unavail_img_(bot, message):
     filters.private & filters.command(["fsubmsg"]) & filters.user(ADMINS)
 )
 async def set_fsub_msg_(bot, update):
-    data = update.text.split()
-    msg = " ".join(data[1:])
-    if len(data) >= 2:
-        if msg.lower() == "off":
-            msg = None
-        await set_fsub_msg(msg)
-        if msg:
-            await update.reply_text(f"Fsub message set to `{msg}`")
-        else:
-            await update.reply_text("Fsub message disabled")
-    else:
-        await update.reply_text("Please send in proper format `/fsubmsg message/off`")
+    
+    command_text = update.text.split(None, 1)
+    if len(command_text) < 2:
+        await update.reply_text(
+            "Please use the correct format: `/fsubmsg message/off`"
+        )
+        return
+    text = command_text[1]
+    msg = text.strip()
 
+    if msg.lower() == "off":
+        msg = None
+    await set_fsub_msg(msg)
+    if msg:
+        await update.reply_text(f"Fsub message set to `{msg}`")
+    else:
+        await update.reply_text("Fsub message disabled")
+        
 
 @Client.on_message(
     filters.private & filters.command(["fsubimg"]) & filters.user(ADMINS)
