@@ -96,6 +96,24 @@ async def rem_fsub_req_file(user_id, chat_id):
             return False
 
 
+async def remove_fsub_users():
+    async with INSERTION_LOCK:
+        session = SESSION()
+        try:
+            session.query(FsubReq).delete()
+            session.commit()
+            session.query(FsubReg).delete()
+            session.commit()
+            LOGGER.warning("Removed all fsub users")
+            return True
+        except Exception as e:
+            session.rollback()
+            LOGGER.warning("Error removing fsub users: %s", str(e))
+            return False
+        finally:
+            session.close()
+
+
 async def delete_group_req_id(chat_id):
     async with INSERTION_LOCK:
         session = SESSION()

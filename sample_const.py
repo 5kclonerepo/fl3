@@ -60,6 +60,7 @@ __`/indexlink <last message link>` or `/indexlink <start message link> <last mes
 ‣/delfilter - __Delete a text filter__ - `/delfilter filter`
 ‣/listfilters - __List all filters currently added in the bot__
 ‣/forcesub - __Set force subscribe channel__ - `/forcesub channel_id/off` __or__ `/forcesub channel_id request`(for request channel) __Bot must be admin of that channel (Bot will create a new invite link for that channel)__
+‣/clearfsubusers - __Clear all force subscribe users from db__
 ‣/checklink - __Check invite link for force subscribe channel__
 ‣/infomsg - __Set info message before sending file__ - `/infomsg message/off`
 ‣/infoimg - __Set info image before sending file__ - Reply `/infoimg` to an image to set or  `/infoimg off` to remove

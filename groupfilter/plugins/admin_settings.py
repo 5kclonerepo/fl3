@@ -609,7 +609,7 @@ async def set_fsub_img_(bot, message):
             return
         try:
             file_id = str(message.reply_to_message.photo.file_id)
-            image = await set_unavail_img(file_id)
+            image = await set_fsub_img(file_id)
         except AttributeError:
             await message.reply_text(
                 "Please reply to a image only (not document).", quote=True
