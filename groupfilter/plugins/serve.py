@@ -250,7 +250,9 @@ async def get_result(search, page_no, user_id, username, chat_id):
                     btn[1].append(btn_kb)
             else:
                 file_id = file["file_id"]
-                filename = f"[{get_size(file['file_size'])}] {file['file_name']}"
+                org_f_name = file["file_name"]
+                tr_f_name = trim_button_text(org_f_name)
+                filename = f"[{get_size(file['file_size'])}] {tr_f_name}"
                 btn_kb = InlineKeyboardButton(
                     text=filename,
                     callback_data=f"file#{file_id}#{user_id}",
@@ -494,3 +496,9 @@ async def del_message(chat_id: int, message_id: int, txt=None):
         LOGGER.warning(
             "Failed to delete message: %s : %s : %s", chat_id, message_id, str(e)
         )
+
+
+def trim_button_text(text, max_length=64):
+    if len(text) > max_length:
+        return text[:max_length-3] + "..."
+    return text

@@ -172,7 +172,7 @@ async def index_files_task(bot, msg, chat_id, start_msg_id, last_msg_id):
                         await msg.edit(
                             f"Total messages fetched: {current}\nTotal messages processed: {total_files}", reply_markup=kb
                         )
-                        LOGGER.info("Total messages processed: %s", total_files)
+                        LOGGER.info("Total messages & files processed: %s : %s", current, total_files)
                     except FloodWait as e:
                         LOGGER.warning(
                             "FloodWait while editing count message, sleeping for: %s seconds",
