@@ -8,7 +8,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.pool import StaticPool
 from groupfilter import DB_URL, LOGGER, BOT_TOKEN
-from groupfilter.utils.helpers import unpack_new_file_id, STOP_WORDS
+from groupfilter.utils.helpers import unpack_new_file_id
+from sample_const import STOP_WORDS
 from sqlalchemy import Index
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from groupfilter.db.redis import NamespacedRedis
