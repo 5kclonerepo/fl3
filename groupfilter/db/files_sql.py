@@ -11,7 +11,7 @@ from groupfilter import DB_URL, LOGGER, BOT_TOKEN
 from groupfilter.utils.helpers import unpack_new_file_id
 from sqlalchemy import Index
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from groupfilter.db.redis import NamespacedRedis
+from pmfilter.db.redis import NamespacedRedis
 
 BASE = declarative_base()
 
