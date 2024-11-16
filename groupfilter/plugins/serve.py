@@ -262,13 +262,18 @@ async def get_result(search, page_no, user_id, username, chat_id):
                 )
                 btn.append([btn_kb])
 
+        nxt_kb_cb = trim_button_text(f"nxt_pg {user_id} {page + 1} {search}", nod=True)
+        prev_kb_cb = trim_button_text(
+            f"prev_pg {user_id} {page - 1} {search}", nod=True
+        )
+
         nxt_kb = InlineKeyboardButton(
             text="Next >>",
-            callback_data=f"nxt_pg {user_id} {page + 1} {search}",
+            callback_data=nxt_kb_cb,
         )
         prev_kb = InlineKeyboardButton(
             text="<< Previous",
-            callback_data=f"prev_pg {user_id} {page - 1} {search}",
+            callback_data=prev_kb_cb,
         )
 
         kb = []
@@ -362,7 +367,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
 
     if admin_settings.caption_uname:
         f_caption = f_caption + "\n\n" + "**" + admin_settings.caption_uname + "**"
-                
+
     if isinstance(query, CallbackQuery):
         mess = query.message
     elif isinstance(query, Message):
@@ -500,7 +505,9 @@ async def del_message(chat_id: int, message_id: int, txt=None):
         )
 
 
-def trim_button_text(text, max_length=64):
+def trim_button_text(text, nod=False, max_length=64):
     if len(text) > max_length:
-        return text[:max_length-3] + "..."
+        if nod:
+            return text[:max_length]
+        return text[: max_length - 3] + "..."
     return text
