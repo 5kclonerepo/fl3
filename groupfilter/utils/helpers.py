@@ -4,6 +4,7 @@ import base64
 from struct import pack
 from pyrogram import raw
 from pyrogram.file_id import FileId, FileType, PHOTO_TYPES, DOCUMENT_TYPES
+from sample_const import REMOVE_WORDS
 
 
 def get_input_file_from_file_id(
@@ -14,7 +15,8 @@ def get_input_file_from_file_id(
         decoded = FileId.decode(file_id)
     except Exception:
         raise ValueError(
-            f'Failed to decode "{file_id}". The value does not represent an existing local file, '
+            f'Failed to decode "{
+                file_id}". The value does not represent an existing local file, '
             f"HTTP URL, or valid file id."
         )
 
@@ -22,7 +24,8 @@ def get_input_file_from_file_id(
 
     if expected_file_type is not None and file_type != expected_file_type:
         raise ValueError(
-            f'Expected: "{expected_file_type}", got "{file_type}" file_id instead'
+            f'Expected: "{expected_file_type}", got "{
+                file_type}" file_id instead'
         )
 
     if file_type in (FileType.THUMBNAIL, FileType.CHAT_PHOTO):
@@ -82,38 +85,40 @@ def unpack_new_file_id(new_file_id):
     return file_id, file_ref
 
 
-def edit_text(c_caption):
-    org_caption = c_caption
-
-    caption = org_caption.replace(".", " ")
-    final_string = " ".join(
-        x
-        for x in caption.split()
-        if not x.startswith(
-            (
-                "https://",
-                "https//",
-                "http://",
-                "http//",
-                "t.me",
-                "@",
-                "mkv",
-                "mp4",
-                "avi",
-                "mp3",
-                "MP3",
-            )
-        )
+def edit_txt(c_caption):
+    caption = c_caption.replace(".", " ").replace("_", " ")
+    skip_prefixes = (
+        "https://",
+        "https//",
+        "http://",
+        "http//",
+        "t.me",
+        "@",
+        "mkv",
+        "mp4",
+        "avi",
+        "mp3",
+        "MP3",
     )
-    final_string = final_string.replace("_", " ")
     final_string = " ".join(
-        x
-        for x in final_string.split()
-        if not x.startswith(("https://", "http://", "t.me", "@"))
+        word for word in caption.split() if not word.startswith(skip_prefixes)
     )
-    # final_string = "**" + final_string + "**"
-    return final_string
+    return final_string.strip()
 
 
 def clean_text(text):
     return re.sub(r"[._\[\]{}()<>|;:'\",?!`~@#$%^&+=\\]", " ", text)
+
+
+def clean_fname(text):
+    pattern = re.compile("|".join(map(re.escape, REMOVE_WORDS)), flags=re.IGNORECASE)
+    return re.sub(pattern, " ", text).strip()
+
+
+def clean_se(text):
+    match = re.search(r"(S\d+\s*E\d+|S\d+\s*EP\d+|S\d+|E\d+|EP\d+)", text, re.IGNORECASE)    
+    if match:
+        season_episode = match.group().replace(" ", "").upper()
+        formatted_text = f"[{season_episode}] " + re.sub(match.group(), "", text).strip()
+        return formatted_text    
+    return text

@@ -33,7 +33,7 @@ from groupfilter.db.settings_sql import (
 )
 from groupfilter.db.ban_sql import is_banned
 from groupfilter.db.filters_sql import is_filter
-from groupfilter.utils.helpers import edit_text
+from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
 from groupfilter import LOGGER, ADMINS
 from __main__ import app
 
@@ -77,7 +77,7 @@ async def filter_(bot, message, search=None):
         )
     elif 2 < len(message.text) < 100:
         search = message.text
-        search = edit_text(search)
+        search = clean_text(search)
     else:
         return
 
@@ -228,19 +228,21 @@ async def get_result(search, page_no, user_id, username, chat_id):
         page = page_no
 
         for file in files["files"]:
+            file_id = file["file_id"]
+            file_name = file["file_name"]
+            file_name = clean_fname(file_name)
+            file_name = clean_se(file_name)
+            file_size = get_size(file["file_size"])
             if link_mode == "ON":
                 index += 1
                 btn_count += 1
-                file_id = file["file_id"]
-                filename = f"**{index}.** [{file['file_name']}](https://t.me/{username}/?start={file_id}_{user_id}) -\n`[{get_size(file['file_size'])}]`"
+                filename = f"**{index}.** [{file_name}](https://t.me/{username}/?start={file_id}_{user_id}) -\n`[{file_size}]`"
                 result += "\n" + filename
             elif list_mode == "ON":
                 index += 1
                 btn_count += 1
-                file_id = file["file_id"]
-                filename = f"**{index}.** `{file['file_name']}` - `[{get_size(file['file_size'])}]`"
+                filename = f"**{index}.** `{file_name}` - `[{file_size}]`"
                 result += "\n" + filename
-
                 btn_kb = InlineKeyboardButton(
                     text=f"{index}", callback_data=f"file#{file_id}#{user_id}"
                 )
@@ -252,10 +254,8 @@ async def get_result(search, page_no, user_id, username, chat_id):
                 else:
                     btn[1].append(btn_kb)
             else:
-                file_id = file["file_id"]
-                org_f_name = file["file_name"]
-                tr_f_name = trim_button_text(org_f_name)
-                filename = f"[{get_size(file['file_size'])}] {tr_f_name}"
+                tr_f_name = trim_button_text(file_name)
+                filename = f"[{file_size}] {tr_f_name}"
                 btn_kb = InlineKeyboardButton(
                     text=filename,
                     callback_data=f"file#{file_id}#{user_id}",
@@ -324,7 +324,7 @@ async def get_files(bot, query):
         file_query = query.text.split()[1]
         fid_sp = file_query.split("_")
         file_id = "_".join(fid_sp[:-1])
-        if not file_query.startswith("search"):
+        if not file_query.startswith(("search", "start")):
             org_user_id = file_query.split("_")[-1]
             if int(org_user_id) != int(user_id):
                 await query.reply_text(text="Not your button")
@@ -369,9 +369,9 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
         f_caption = f_caption + "\n\n" + "**" + admin_settings.caption_uname + "**"
 
     if isinstance(query, CallbackQuery):
-        mess = query.message
+        mesg = query.message
     elif isinstance(query, Message):
-        mess = query
+        mesg = query
 
     info = None
     if admin_settings.info_msg and admin_settings.info_img:
@@ -382,7 +382,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                 caption=admin_settings.info_msg,
             )
         else:
-            info = await mess.reply_photo(
+            info = await mesg.reply_photo(
                 photo=admin_settings.info_img,
                 caption=admin_settings.info_msg,
                 quote=True,
@@ -404,7 +404,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                 parse_mode=ParseMode.MARKDOWN,
             )
         else:
-            msg = await mess.reply_cached_media(
+            msg = await mesg.reply_cached_media(
                 file_id=file_id,
                 caption=f_caption,
                 parse_mode=ParseMode.MARKDOWN,
