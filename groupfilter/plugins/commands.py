@@ -10,7 +10,7 @@ from groupfilter.db.broadcast_sql import add_user
 from groupfilter.utils.constants import STARTMSG, HELPMSG
 from groupfilter import LOGGER, ADMINS, START_MSG, HELP_MSG, START_KB, HELP_KB
 from groupfilter.utils.util_support import humanbytes, get_db_size
-from groupfilter.plugins.serve import get_files, filter_
+from groupfilter.plugins.serve import get_files, filter_, scheduler
 
 
 @Client.on_message(filters.command(["start"]))
@@ -89,6 +89,7 @@ async def help_cb(bot, query):
 async def restart(bot, update):
     LOGGER.warning("Restarting bot using /restart command")
     msg = await update.reply_text(text="__Restarting.....__")
+    scheduler.shutdown()
     await asyncio.sleep(5)
     await msg.edit("__Bot restarted !__")
     os.execv(sys.executable, ["python3", "-m", "groupfilter"] + sys.argv)
