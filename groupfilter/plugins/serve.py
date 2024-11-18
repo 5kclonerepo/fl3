@@ -1,3 +1,4 @@
+import asyncio
 import re
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -14,11 +15,13 @@ from pyrogram.types import (
     ChatMemberUpdated,
 )
 from pyrogram.enums import ParseMode
-from pyrogram.errors.exceptions.bad_request_400 import (
+from pyrogram.errors import (
     MessageNotModified,
     ButtonDataInvalid,
     QueryIdInvalid,
     MediaEmpty,
+    MessageIdInvalid,
+    FloodWait
 )
 from groupfilter.plugins.fsub import check_fsub
 from groupfilter.db.files_sql import (
@@ -173,10 +176,16 @@ async def pages(bot, query):
                     f"{result}",
                     link_preview_options=LinkPreviewOptions(is_disabled=True),
                 )
+        except FloodWait as e:
+            LOGGER.warning(
+                "FloodWait while editing message. Sleeping for %s seconds", e.value
+            )
+            await asyncio.sleep(e.value)
+            await pages(bot, query)
         except ButtonDataInvalid as e:
             LOGGER.error(btn)
             LOGGER.error("ButtonDataInvalid: %s", str(e))
-        except MessageNotModified:
+        except (MessageNotModified, MessageIdInvalid):
             pass
     else:
         admin_settings = await get_admin_settings()
@@ -302,6 +311,9 @@ async def get_result(search, page_no, user_id, username, chat_id):
 @Client.on_callback_query(filters.regex(r"^file#(.+)#(\d+)$"))
 async def get_files(bot, query):
     user_id = query.from_user.id
+    if not query.message:
+        await query.answer("Try with new search again", show_alert=True)
+        return
     if isinstance(query, CallbackQuery):
         mesg = query.message
         org_user_id = query.data.split("#")[2]
@@ -421,6 +433,9 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
             )
     except MediaEmpty:
         LOGGER.warning("File not found: %s", str(file_id))
+        return
+    except AttributeError:
+        await query.answer("Try with new search again", show_alert=True)
         return
 
     if admin_settings.auto_delete:
