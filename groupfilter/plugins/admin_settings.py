@@ -342,6 +342,13 @@ async def fsub_req(bot, update):
         req = data[-1]
         if req.lower() == "off":
             request = False
+        elif req.lower() == "on":
+            request = True
+        else:
+            await update.reply_text(
+                "Please send in proper format `/fsubrequest on/off` if you want to set join request"
+            )
+            return
         
         channel = None
         admin_settings = await get_admin_settings()
@@ -350,26 +357,23 @@ async def fsub_req(bot, update):
             if not channel:
                 await update.reply_text("Please add fsub channel first")
                 return
-                     
-        if req.lower() != "on":
-            await update.reply_text(
-                "Please send in proper format `/fsubrequest on/off` if you want to set join request"
-            )
+
+        try:
+            link = await bot.create_chat_invite_link(int(channel), creates_join_request=request)
+            inv_link = link.invite_link
+        except Exception as e:
+            await update.reply_text(f" Error while creating channel invite link: {str(e)}")
             return
-        request = True
 
-    try:
-        link = await bot.create_chat_invite_link(channel, creates_join_request=request)
-        inv_link = link.invite_link
-    except Exception as e:
-        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
-        return
-
-    await set_channel_link(inv_link)
-    await set_join_request(request)
-    await update.reply_text(
-        f"Join Request set to: {request}\nInvite link: {link.invite_link}"
-    )
+        await set_channel_link(inv_link)
+        await set_join_request(request)
+        await update.reply_text(
+            f"Join Request set to: {request}\nInvite link: {link.invite_link}"
+        )
+    else:
+        await update.reply_text(
+            "Please send in proper format `/fsubrequest on/off`"
+        )
 
 @Client.on_message(
     filters.private & filters.command(["checklink"]) & filters.user(ADMINS)
