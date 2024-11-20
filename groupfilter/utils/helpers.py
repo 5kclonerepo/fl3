@@ -118,12 +118,16 @@ def clean_fname(text):
 
 def clean_se(text):
     match = re.search(
-        r"(S\d+\s*E\d+|S\d+\s*EP\d+|S\d+|E\d+|EP\d+)", text, re.IGNORECASE
+        r"(S\d+[ _\.]*E\d+|S\d+[ _\.]*EP\d+|S\d+|E\d+|EP\d+)", text, re.IGNORECASE
     )
     if match:
-        season_episode = match.group().replace(" ", "").upper()
-        formatted_text = (
-            f"[{season_episode}] " + re.sub(match.group(), "", text).strip()
-        )
-        return formatted_text
-    return text
+        season_episode = re.sub(r"[ _\.]*", "", match.group()).upper()
+        cleaned_text = re.sub(re.escape(match.group()), "", text)
+    else:
+        cleaned_text = text
+    cleaned_text = re.sub(r"[ _\.]+", " ", cleaned_text).strip()
+
+    if match:
+        return f"[{season_episode}] {cleaned_text}"
+    else:
+        return cleaned_text
