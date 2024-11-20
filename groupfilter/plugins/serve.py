@@ -351,7 +351,6 @@ async def get_files(bot, query):
     elif isinstance(query, Message):
         mesg = query
         file_query = query.text.split()[1]
-        print(query.text)
         fid_sp = file_query.split("_")
         file_id = "_".join(fid_sp[:-1])
         if not file_id or fid_sp[0].startswith(("search", "start", " ")):
