@@ -75,22 +75,44 @@ async def repair_mode_(bot, update):
     filters.private & filters.command(["customcaption"]) & filters.user(ADMINS)
 )
 async def custom_caption_(bot, update):
-    data = update.text.split()
-    caption = " ".join(data[1:])
-    if len(data) >= 2:
-        if caption.lower() == "off":
-            caption = None
-
-        await set_custom_caption(caption)
-
-        if caption:
-            await update.reply_text(f"Custom caption set to `{caption}`")
-        else:
-            await update.reply_text("Custom caption disabled")
-    else:
+    command_text = update.text.split(None, 1)
+    if len(command_text) < 2:
         await update.reply_text(
             "Please send in proper format `/customcaption caption/off`"
         )
+        return
+    text = command_text[1]
+    caption = text.strip()
+
+    if caption.lower() == "off":
+        caption = None
+    await set_custom_caption(caption)
+    if caption:
+        await update.reply_text(f"Custom caption set to `{caption}`")
+    else:
+        await update.reply_text("Custom caption disabled")
+
+
+@Client.on_message(
+    filters.private & filters.command(["setcaptionplus"]) & filters.user(ADMINS)
+)
+async def caption_username(bot, update):
+    command_text = update.text.split(None, 1)
+    if len(command_text) < 2:
+        await update.reply_text(
+            "Please use the correct format: `/setcaptionplus caption/off`"
+        )
+        return
+    text = command_text[1]
+    captionplus = text.strip()
+
+    if captionplus.lower() == "off":
+        captionplus = None
+    await set_captionplus(captionplus)
+    if captionplus:
+        await update.reply_text(f"File additional caption set to:\n`{captionplus}`")
+    else:
+        await update.reply_text("File additional caption disabled")
 
 
 @Client.on_message(
@@ -391,28 +413,6 @@ async def testlink(bot, update):
         await update.reply_text(
             "Force Subscription is disabled, please enable it first"
         )
-
-
-@Client.on_message(
-    filters.private & filters.command(["setcaptionplus"]) & filters.user(ADMINS)
-)
-async def caption_username(bot, update):
-    command_text = update.text.split(None, 1)
-    if len(command_text) < 2:
-        await update.reply_text(
-            "Please use the correct format: `/setcaptionplus caption/off`"
-        )
-        return
-    text = command_text[1]
-    captionplus = text.strip()
-
-    if captionplus.lower() == "off":
-        captionplus = None
-    await set_captionplus(captionplus)
-    if captionplus:
-        await update.reply_text(f"File additional caption set to:\n`{captionplus}`")
-    else:
-        await update.reply_text("File additional username disabled")
 
 
 @Client.on_message(filters.private & filters.command(["total"]) & filters.user(ADMINS))
