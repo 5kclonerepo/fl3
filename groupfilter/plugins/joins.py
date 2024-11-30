@@ -17,28 +17,36 @@ async def new_join_req(bot, update):
     user_id = update.from_user.id
     admin_settings = await get_admin_settings()
     if admin_settings:
-        fsub = admin_settings.fsub_channel
-        request = admin_settings.join_req
-        link = admin_settings.channel_link
+        fsub = admin_settings.fsub_channel if admin_settings.fsub_channel else 0
+        fsub2 = admin_settings.fsub_channel2 if admin_settings.fsub_channel2 else 0
+        request = admin_settings.join_req if admin_settings.join_req else None
+        request2 = admin_settings.join_req2 if admin_settings.join_req2 else None
+        link = admin_settings.channel_link if admin_settings.channel_link else None
+        link2 = admin_settings.channel_link2 if admin_settings.channel_link2 else None
         if update.invite_link:
             inv_link = update.invite_link.invite_link
         else:
-            inv_link = link
-        if link and request and str(link) == str(inv_link):
-            if int(fsub) != chat_id:
+            return
+        if (
+            link
+            or link2
+            and request
+            or request2
+            and str(inv_link) in [str(link), str(link2)]
+        ):
+            if chat_id not in [int(fsub), int(fsub2)]:
                 return
             user_det = await is_req_user(int(user_id), int(chat_id))
             if user_det:
                 file_id = user_det.fileid
-                if file_id:
+                msg_id = user_det.msg_id
+                if file_id and file_id != "fsub":
                     await send_file(admin_settings, bot, update, user_id, file_id)
-                    await rem_fsub_req_file(user_id, chat_id)
-            else:
-                LOGGER.info(
-                    "Unable to find user details from db: %s : %s. Skipping file send.",
-                    str(chat_id),
-                    str(user_id),
-                )
+                try:
+                    await bot.delete_messages(chat_id=user_id, message_ids=[msg_id])
+                except Exception:
+                    pass
+                await rem_fsub_req_file(user_id, chat_id)
 
 
 @Client.on_chat_member_updated()
@@ -50,74 +58,27 @@ async def new_joins(bot, update):
     except AttributeError:
         return
     chat_id = update.chat.id
-    fsub = None
     admin_settings = await get_admin_settings()
     if admin_settings:
-        fsub = admin_settings.fsub_channel
-        link = admin_settings.channel_link
+        fsub = admin_settings.fsub_channel if admin_settings.fsub_channel else 0
+        fsub2 = admin_settings.fsub_channel2 if admin_settings.fsub_channel2 else 0
+        link = admin_settings.channel_link if admin_settings.channel_link else None
+        link2 = admin_settings.channel_link2 if admin_settings.channel_link2 else None
         if update.invite_link:
             inv_link = update.invite_link.invite_link
         else:
-            inv_link = link
-        if link and str(link) == str(inv_link):
-            if int(fsub) != chat_id:
+            return
+        if link or link2 and str(inv_link) in [str(link), str(link2)]:
+            if chat_id not in [int(fsub), int(fsub2)]:
                 return
             user_det = await is_reg_user(int(user_id), int(chat_id))
             if user_det:
                 file_id = user_det.fileid
-                await send_file(admin_settings, bot, update, user_id, file_id)
+                msg_id = user_det.msg_id
+                if file_id and file_id != "fsub":
+                    await send_file(admin_settings, bot, update, user_id, file_id)
+                try:
+                    await bot.delete_messages(chat_id=user_id, message_ids=[msg_id])
+                except Exception:
+                    pass
                 await rem_fsub_reg_file(user_id, chat_id)
-            else:
-                LOGGER.info(
-                    "Unable to find user details from db: %s : %s",
-                    str(chat_id),
-                    str(user_id),
-                )
-
-
-async def member_joined(bot, update):
-    result = await on_status_change(bot, update)
-    if result is None:
-        return False
-    was_member, is_member = result
-    if was_member or not is_member:
-        return False
-    return True
-
-
-async def on_status_change(bot, update):
-    old_chat_member = update.old_chat_member
-    new_chat_member = update.new_chat_member
-
-    try:
-        old_status = old_chat_member.status
-    except AttributeError:
-        old_status = None
-
-    try:
-        new_status = new_chat_member.status
-    except AttributeError:
-        new_status = None
-
-    try:
-        old_is_member = old_status in [
-            ChatMember.MEMBER,
-            ChatMember.OWNER,
-            ChatMember.ADMINISTRATOR,
-        ] or (old_status == ChatMember.RESTRICTED and old_chat_member.is_member)
-    except AttributeError:
-        old_is_member = False
-
-    try:
-        new_is_member = new_status in [
-            ChatMember.MEMBER,
-            ChatMember.OWNER,
-            ChatMember.ADMINISTRATOR,
-        ] or (new_status == ChatMember.RESTRICTED and new_chat_member.is_member)
-    except AttributeError:
-        new_is_member = False
-
-    if old_status == new_status and old_is_member == new_is_member:
-        return None
-
-    return old_is_member, new_is_member

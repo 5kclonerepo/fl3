@@ -343,7 +343,9 @@ async def force_sub(bot, update):
         return
 
     try:
-        link = await bot.create_chat_invite_link(channel, creates_join_request=request)
+        link = await bot.create_chat_invite_link(
+            int(channel), creates_join_request=request
+        )
         inv_link = link.invite_link
     except Exception as e:
         await update.reply_text(f" Error while creating channel invite link: {str(e)}")
@@ -366,13 +368,6 @@ async def fsub_req(bot, update):
         req = data[-1]
         if req.lower() == "off":
             request = False
-        elif req.lower() == "on":
-            request = True
-        else:
-            await update.reply_text(
-                "Please send in proper format `/fsubrequest on/off` if you want to set join request"
-            )
-            return
 
         channel = None
         admin_settings = await get_admin_settings()
@@ -382,33 +377,135 @@ async def fsub_req(bot, update):
                 await update.reply_text("Please add fsub channel first")
                 return
 
-        try:
-            link = await bot.create_chat_invite_link(
-                int(channel), creates_join_request=request
-            )
-            inv_link = link.invite_link
-        except Exception as e:
+        if req.lower() != "on":
             await update.reply_text(
-                f" Error while creating channel invite link: {str(e)}"
+                "Please send in proper format `/fsubrequest on/off` if you want to set join request"
             )
             return
+        request = True
 
-        await set_channel_link(inv_link)
-        await set_join_request(request)
-        await update.reply_text(
-            f"Join Request set to: {request}\nInvite link: {link.invite_link}"
+    try:
+        link = await bot.create_chat_invite_link(
+            int(channel), creates_join_request=request
         )
+        inv_link = link.invite_link
+    except Exception as e:
+        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
+        return
+
+    await set_channel_link(inv_link)
+    await set_join_request(request)
+    await update.reply_text(
+        f"Join Request set to: {request}\nInvite link: {link.invite_link}"
+    )
+
+
+@Client.on_message(
+    filters.private & filters.command(["forcesub2"]) & filters.user(ADMINS)
+)
+async def force_sub2(bot, update):
+    data = update.text.split()
+    if len(data) == 2:
+        channel = data[-1]
+        if channel.lower() == "off":
+            await set_channel_link(None, add=True)
+            await update.reply_text("Force Subscription 2 disabled")
+            return
+        request = False
+    elif len(data) == 3:
+        channel = data[-2]
+        req = data[-1]
+        if req != "request":
+            await update.reply_text(
+                "Please send in proper format `/forcesub2 channel_id request` if you want to set join request"
+            )
+            return
+        request = True
     else:
-        await update.reply_text("Please send in proper format `/fsubrequest on/off`")
+        await update.reply_text(
+            "Please send in proper format `/forcesub2 channel_id/off`\n`/forcesub2 channel_id request` for join request"
+        )
+        return
+
+    if not channel.startswith("-100"):
+        await update.reply_text("Please check channel ID again")
+        return
+
+    try:
+        link = await bot.create_chat_invite_link(
+            int(channel), creates_join_request=request
+        )
+        inv_link = link.invite_link
+    except Exception as e:
+        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
+        return
+
+    await set_channel_link(inv_link, add=True)
+    await set_force_sub(int(channel), add=True)
+    await set_join_request(request, add=True)
+    await update.reply_text(
+        f"Force Subscription 2 channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: {request}"
+    )
+
+
+@Client.on_message(
+    filters.private & filters.command(["fsubrequest2"]) & filters.user(ADMINS)
+)
+async def fsub_req2(bot, update):
+    data = update.text.split()
+    if len(data) == 2:
+        req = data[-1]
+        if req.lower() == "off":
+            request = False
+
+        channel = None
+        admin_settings = await get_admin_settings()
+        if admin_settings:
+            channel = admin_settings.fsub_channel2
+            if not channel:
+                await update.reply_text("Please add fsub channel 2 first")
+                return
+
+        if req.lower() != "on":
+            await update.reply_text(
+                "Please send in proper format `/fsubrequest2 on/off` if you want to set join request"
+            )
+            return
+        request = True
+
+    try:
+        link = await bot.create_chat_invite_link(
+            int(channel), creates_join_request=request
+        )
+        inv_link = link.invite_link
+    except Exception as e:
+        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
+        return
+
+    await set_channel_link(inv_link, add=True)
+    await set_join_request(request, add=True)
+    await update.reply_text(
+        f"Join Request 2 set to: {request}\nInvite link: {link.invite_link}"
+    )
 
 
 @Client.on_message(
     filters.private & filters.command(["checklink"]) & filters.user(ADMINS)
 )
 async def testlink(bot, update):
-    link = await get_link()
-    if link:
-        await update.reply_text(f"Invite link for force subscription channel: {link}")
+    link1, link2 = await get_link()
+    if link1 and link2:
+        await update.reply_text(
+            f"Invite link for force subscription channel 1: {link1}\nInvite link 2 for force subscription channel 2: {link2}"
+        )
+    elif link1:
+        await update.reply_text(
+            f"Invite link for force subscription channel 1: {link1}"
+        )
+    elif link2:
+        await update.reply_text(
+            f"Invite link for force subscription channel 2: {link2}"
+        )
     else:
         await update.reply_text(
             "Force Subscription is disabled, please enable it first"

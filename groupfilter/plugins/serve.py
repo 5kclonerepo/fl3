@@ -21,7 +21,7 @@ from pyrogram.errors import (
     QueryIdInvalid,
     MediaEmpty,
     MessageIdInvalid,
-    FloodWait
+    FloodWait,
 )
 from groupfilter.plugins.fsub import check_fsub
 from groupfilter.db.files_sql import (
@@ -52,7 +52,7 @@ scheduler.start()
 async def filter_(bot, message, search=None):
     if not message.from_user:
         return
-    
+
     user_id = message.from_user.id
     chat_id = message.chat.id
 
@@ -320,7 +320,7 @@ async def get_result(search, page_no, user_id, username, chat_id):
 
 
 @Client.on_callback_query(filters.regex(r"^file#(.+)#(\d+)$"))
-async def get_files(bot, query):    
+async def get_files(bot, query):
     user_id = query.from_user.id
     if isinstance(query, CallbackQuery):
         if query.message:
@@ -355,7 +355,7 @@ async def get_files(bot, query):
         file_id = "_".join(fid_sp[:-1])
         if not file_id or fid_sp[0].startswith(("search", "start", " ")):
             return
-        
+
         if not file_query.startswith(("search", "start")):
             org_user_id = file_query.split("_")[-1]
             try:
@@ -369,21 +369,43 @@ async def get_files(bot, query):
         await mesg.reply_text("You are banned. You can't use this bot.", quote=True)
         return
 
-    force_sub = None
-    request = None
+    force_sub, request, link, force_sub2, request2, link2 = (
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+
     admin_settings = await get_admin_settings()
 
     if admin_settings:
         force_sub = admin_settings.fsub_channel
         link = admin_settings.channel_link
-        request = admin_settings.join_req
-
-    if force_sub:
-        user_found = await check_fsub(
-            bot, query, force_sub, link, request, user_id, file_id, admin_settings
-        )
-        if not user_found:
-            return
+        if link:
+            request = admin_settings.join_req
+            uc_one = await check_fsub(
+                bot, query, force_sub, link, request, user_id, file_id, admin_settings
+            )
+            if not uc_one:
+                return
+        force_sub2 = admin_settings.fsub_channel2
+        link2 = admin_settings.channel_link2
+        if link2:
+            request2 = admin_settings.join_req2
+            uc_two = await check_fsub(
+                bot,
+                query,
+                force_sub2,
+                link2,
+                request2,
+                user_id,
+                file_id,
+                admin_settings,
+            )
+            if not uc_two:
+                return
 
     await send_file(admin_settings, bot, query, user_id, file_id)
 

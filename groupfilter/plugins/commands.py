@@ -11,6 +11,7 @@ from groupfilter.utils.constants import STARTMSG, HELPMSG
 from groupfilter import LOGGER, ADMINS, START_MSG, HELP_MSG, START_KB, HELP_KB
 from groupfilter.utils.util_support import humanbytes, get_db_size
 from groupfilter.plugins.serve import get_files, filter_, scheduler
+from groupfilter.plugins.fsub import get_inline_fsub
 
 
 @Client.on_message(filters.command(["start"]))
@@ -40,6 +41,8 @@ async def start(bot, update):
         if src[0] == "search":
             term = update.command[1].split("search_", 1)[-1].replace("_", " ")
             await filter_(bot, update, search=term)
+        elif update.command[1].startswith("fs_"):
+            await get_inline_fsub(bot, update)
         else:
             await get_files(bot, update)
 

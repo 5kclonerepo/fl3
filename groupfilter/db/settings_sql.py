@@ -17,8 +17,11 @@ class AdminSettings(BASE):
     auto_delete = Column(Numeric)
     custom_caption = Column(TEXT)
     fsub_channel = Column(Numeric)
+    fsub_channel2 = Column(Numeric)
     channel_link = Column(TEXT)
+    channel_link2 = Column(TEXT)
     join_req = Column(Boolean)
+    join_req2 = Column(Boolean)
     caption_uname = Column(TEXT)
     repair_mode = Column(Boolean)
     info_msg = Column(TEXT)
@@ -36,8 +39,11 @@ class AdminSettings(BASE):
         self.auto_delete = 0
         self.custom_caption = None
         self.fsub_channel = None
+        self.fsub_channel2 = None
         self.channel_link = None
+        self.channel_link2 = None
         self.join_req = False
+        self.join_req2 = False
         self.caption_uname = None
         self.repair_mode = False
         self.info_msg = None
@@ -184,7 +190,7 @@ async def set_custom_caption(caption):
         LOGGER.warning("Error setting custom caption: %s ", str(e))
 
 
-async def set_force_sub(channel):
+async def set_force_sub(channel, add=False):
     try:
         with INSERTION_LOCK:
             session = SESSION()
@@ -194,14 +200,17 @@ async def set_force_sub(channel):
                 session.add(admin_setting)
                 session.commit()
 
-            admin_setting.fsub_channel = channel
+            if add:
+                admin_setting.fsub_channel2 = channel
+            else:
+                admin_setting.fsub_channel = channel
             session.commit()
 
     except Exception as e:
         LOGGER.warning("Error setting Force Sub channel: %s ", str(e))
 
 
-async def set_channel_link(link):
+async def set_channel_link(link, add=False):
     try:
         with INSERTION_LOCK:
             session = SESSION()
@@ -211,7 +220,10 @@ async def set_channel_link(link):
                 session.add(admin_setting)
                 session.commit()
 
-            admin_setting.channel_link = link
+            if add:
+                admin_setting.channel_link2 = link
+            else:
+                admin_setting.channel_link = link
             session.commit()
 
     except Exception as e:
@@ -233,11 +245,12 @@ async def get_channel():
 async def get_link():
     try:
         link = SESSION.query(AdminSettings.channel_link).first()
+        link2 = SESSION.query(AdminSettings.channel_link2).first()
         if link:
-            return link[0]
-        return False
+            return link[0], link2[0]
+        return False, False
     except NoResultFound:
-        return False
+        return False, False
     finally:
         SESSION.close()
 
@@ -383,7 +396,7 @@ async def set_button_delete(dur):
         LOGGER.warning("Error setting button delete: %s ", str(e))
 
 
-async def set_join_request(request):
+async def set_join_request(request, add = False):
     try:
         with INSERTION_LOCK:
             session = SESSION()
@@ -393,7 +406,10 @@ async def set_join_request(request):
                 session.add(admin_setting)
                 session.commit()
 
-            admin_setting.join_req = request
+            if add:
+                admin_setting.join_req2 = request
+            else:
+                admin_setting.join_req = request
             session.commit()
 
     except Exception as e:

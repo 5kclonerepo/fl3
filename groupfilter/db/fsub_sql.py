@@ -17,11 +17,13 @@ class FsubReq(BASE):
     user_id = Column(BigInteger)
     chat_id = Column(Numeric)
     fileid = Column(TEXT)
+    msg_id = Column(BigInteger)
 
-    def __init__(self, user_id, chat_id, fileid):
+    def __init__(self, user_id, chat_id, fileid, msg_id):
         self.user_id = user_id
         self.chat_id = chat_id
         self.fileid = fileid
+        self.msg_id = msg_id
 
 
 class FsubReg(BASE):
@@ -30,11 +32,13 @@ class FsubReg(BASE):
     user_id = Column(BigInteger)
     chat_id = Column(Numeric)
     fileid = Column(TEXT)
+    msg_id = Column(BigInteger)
 
-    def __init__(self, user_id, chat_id, fileid):
+    def __init__(self, user_id, chat_id, fileid, msg_id):
         self.user_id = user_id
         self.chat_id = chat_id
         self.fileid = fileid
+        self.msg_id = msg_id
 
 
 def start() -> scoped_session:
@@ -48,7 +52,7 @@ SESSION = start()
 INSERTION_LOCK = asyncio.Lock()
 
 
-async def add_fsub_req_user(user_id, chat_id, fileid):
+async def add_fsub_req_user(user_id, chat_id, fileid, msg_id):
     async with INSERTION_LOCK:
         session = SESSION()
         try:
@@ -61,7 +65,7 @@ async def add_fsub_req_user(user_id, chat_id, fileid):
             session.commit()
             return True
         except NoResultFound:
-            fltr = FsubReq(user_id=user_id, chat_id=chat_id, fileid=fileid)
+            fltr = FsubReq(user_id=user_id, chat_id=chat_id, fileid=fileid, msg_id=msg_id)
             session.add(fltr)
             session.commit()
             return True
@@ -89,29 +93,12 @@ async def rem_fsub_req_file(user_id, chat_id):
                 .one()
             )
             fltr.fileid = None
+            fltr.msg_id = None
             session.commit()
             return True
         except NoResultFound:
             LOGGER.warning("File to delete not found: %s", str(user_id))
             return False
-
-
-async def remove_fsub_users():
-    async with INSERTION_LOCK:
-        session = SESSION()
-        try:
-            session.query(FsubReq).delete()
-            session.commit()
-            session.query(FsubReg).delete()
-            session.commit()
-            LOGGER.warning("Removed all fsub users")
-            return True
-        except Exception as e:
-            session.rollback()
-            LOGGER.warning("Error removing fsub users: %s", str(e))
-            return False
-        finally:
-            session.close()
 
 
 async def delete_group_req_id(chat_id):
@@ -129,7 +116,7 @@ async def delete_group_req_id(chat_id):
             return False
 
 
-async def add_fsub_reg_user(user_id, chat_id, fileid):
+async def add_fsub_reg_user(user_id, chat_id, fileid, msg_id):
     async with INSERTION_LOCK:
         session = SESSION()
         try:
@@ -142,7 +129,7 @@ async def add_fsub_reg_user(user_id, chat_id, fileid):
             session.commit()
             return True
         except NoResultFound:
-            fltr = FsubReg(user_id=user_id, chat_id=chat_id, fileid=fileid)
+            fltr = FsubReg(user_id=user_id, chat_id=chat_id, fileid=fileid, msg_id=msg_id)
             session.add(fltr)
             session.commit()
             return True
@@ -172,6 +159,7 @@ async def rem_fsub_reg_file(user_id, chat_id):
                 .one()
             )
             fltr.fileid = None
+            fltr.msg_id = None
             session.commit()
             return True
         except NoResultFound:
@@ -196,3 +184,21 @@ async def delete_fsub_reg_id(user_id, chat_id):
                 "Error occurred while deleting user requests of chat: %s", str(e)
             )
             return False
+
+
+async def remove_fsub_users():
+    async with INSERTION_LOCK:
+        session = SESSION()
+        try:
+            session.query(FsubReq).delete()
+            session.commit()
+            session.query(FsubReg).delete()
+            session.commit()
+            LOGGER.warning("Removed all fsub users")
+            return True
+        except Exception as e:
+            session.rollback()
+            LOGGER.warning("Error removing fsub users: %s", str(e))
+            return False
+        finally:
+            session.close()
