@@ -222,17 +222,17 @@ async def delete_files(bot, message):
     try:
         for file_type in ("document", "video", "audio"):
             media = getattr(org_msg, file_type, None)
-            if not media:
-                break
-            del_file = await delete_file(media)
-            if del_file == "Not Found":
-                await message.reply(f"`{media.file_name}` not found in database")
-            elif del_file == True:
-                await message.reply(f"`{media.file_name}` deleted from database")
-            else:
-                await message.reply(
-                    f"Error occurred while deleting `{media.file_name}`, please check logs for more info"
-                )
+            if media:
+                del_file = await delete_file(media)
+                if del_file == "Not Found":
+                    await message.reply(f"`{media.file_name}` not found in database")
+                elif del_file == True:
+                    await message.reply(f"`{media.file_name}` deleted from database")
+                else:
+                    await message.reply(
+                        f"Error occurred while deleting `{media.file_name}`, please check logs for more info"
+                    )
+                break            
     except Exception as e:
         LOGGER.warning("Error occurred while deleting file: %s", str(e))
 
