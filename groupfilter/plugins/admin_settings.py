@@ -368,21 +368,26 @@ async def fsub_req(bot, update):
         req = data[-1]
         if req.lower() == "off":
             request = False
-
-        channel = None
-        admin_settings = await get_admin_settings()
-        if admin_settings:
-            channel = admin_settings.fsub_channel
-            if not channel:
-                await update.reply_text("Please add fsub channel first")
-                return
-
-        if req.lower() != "on":
+        elif req.lower() == "on":
+            request = True
+        else:
             await update.reply_text(
                 "Please send in proper format `/fsubrequest on/off` if you want to set join request"
             )
             return
-        request = True
+    else:
+        await update.reply_text(
+            "Please send in proper format `/fsubrequest on/off` if you want to set join request"
+        )
+        return
+
+    channel = None
+    admin_settings = await get_admin_settings()
+    if admin_settings:
+        channel = admin_settings.fsub_channel
+        if not channel:
+            await update.reply_text("Please add fsub channel first")
+            return
 
     try:
         link = await bot.create_chat_invite_link(
@@ -457,21 +462,26 @@ async def fsub_req2(bot, update):
         req = data[-1]
         if req.lower() == "off":
             request = False
-
-        channel = None
-        admin_settings = await get_admin_settings()
-        if admin_settings:
-            channel = admin_settings.fsub_channel2
-            if not channel:
-                await update.reply_text("Please add fsub channel 2 first")
-                return
-
-        if req.lower() != "on":
+        elif req.lower() == "on":
+            request = True
+        else:
             await update.reply_text(
                 "Please send in proper format `/fsubrequest2 on/off` if you want to set join request"
             )
             return
-        request = True
+    else:
+        await update.reply_text(
+            "Please send in proper format `/fsubrequest2 on/off` if you want to set join request"
+        )
+        return
+
+    channel = None
+    admin_settings = await get_admin_settings()
+    if admin_settings:
+        channel = admin_settings.fsub_channel2
+        if not channel:
+            await update.reply_text("Please add fsub channel 2 first")
+            return
 
     try:
         link = await bot.create_chat_invite_link(
