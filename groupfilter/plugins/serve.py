@@ -37,7 +37,7 @@ from groupfilter.db.settings_sql import (
 from groupfilter.db.ban_sql import is_banned
 from groupfilter.db.filters_sql import is_filter
 from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
-from groupfilter import LOGGER, ADMINS
+from groupfilter import LOGGER, ADMINS, AUTH_GRPS
 from __main__ import app
 
 
@@ -52,6 +52,23 @@ scheduler.start()
 async def filter_(bot, message, search=None):
     if not message.from_user:
         return
+    
+    if AUTH_GRPS:
+        if message.chat.id not in AUTH_GRPS:
+            try:
+                await bot.send_message(message.chat.id , "This chat is not authorized to use me!!! BYE!")
+            except Exception:
+                pass
+            try:
+                await bot.leave_chat(message.chat.id)
+            except Exception:
+                LOGGER.warning("Failed to leave chat: %s", message.chat.id)
+            for admin in ADMINS:
+                try:
+                    await bot.send_message(admin, f"Left unauthorized chat.\nID:{message.chat.id}\nName: {message.chat.title}")
+                except Exception:
+                    pass
+        
 
     user_id = message.from_user.id
     chat_id = message.chat.id
