@@ -23,6 +23,8 @@ DB_CHANNELS = [
     int(ch) if id_pattern.search(ch) else ch
     for ch in os.environ.get("DB_CHANNELS", "").split()
 ]
+PM_SUPPORT = os.environ.get("PM_SUPPORT", "ON").upper() in ["TRUE", "ON"]
+
 
 try:
     import const

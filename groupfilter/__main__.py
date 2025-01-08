@@ -1,17 +1,20 @@
 import uvloop
 from pyrogram import Client, idle, __version__
 from pyrogram.raw.all import layer
-from groupfilter import APP_ID, API_HASH, BOT_TOKEN
+from groupfilter import APP_ID, API_HASH, BOT_TOKEN, PM_SUPPORT
 
 uvloop.install()
 
-
 app = None
+
+if PM_SUPPORT:
+    plugins = dict(root="groupfilter.plugins")
+else:
+    plugins = {"root": "groupfilter.plugins", "exclude": ["serve_pm"]}
 
 
 async def main():
     global app
-    plugins = dict(root="groupfilter/plugins")
     app = Client(
         name="groupfilter",
         api_id=APP_ID,

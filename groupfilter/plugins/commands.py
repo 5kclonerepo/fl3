@@ -8,10 +8,21 @@ from pyrogram import Client, filters
 from pyrogram.errors import MessageNotModified
 from groupfilter.db.broadcast_sql import add_user
 from groupfilter.utils.constants import STARTMSG, HELPMSG
-from groupfilter import LOGGER, ADMINS, START_MSG, HELP_MSG, START_KB, HELP_KB
+from groupfilter import (
+    LOGGER,
+    ADMINS,
+    START_MSG,
+    HELP_MSG,
+    START_KB,
+    HELP_KB,
+    PM_SUPPORT,
+)
 from groupfilter.utils.util_support import humanbytes, get_db_size
-from groupfilter.plugins.serve import get_files, filter_, scheduler
+from groupfilter.plugins.serve import get_files, scheduler
 from groupfilter.plugins.fsub import get_inline_fsub
+
+if PM_SUPPORT:
+    from groupfilter.plugins.serve_pm import filter_pm
 
 
 @Client.on_message(filters.command(["start"]))
@@ -39,8 +50,14 @@ async def start(bot, update):
     elif len(update.command) == 2:
         src = update.command[1].split("_")
         if src[0] == "search":
-            term = update.command[1].split("search_", 1)[-1].replace("_", " ")
-            await filter_(bot, update, search=term)
+            if PM_SUPPORT:
+                term = update.command[1].split("search_", 1)[-1].replace("_", " ")
+                await filter_pm(bot, update, search=term)
+            else:
+                await bot.reply_text(
+                    text="**PM mode is deactivated**",
+                    quote=True,
+                )
         elif update.command[1].startswith("fs_"):
             await get_inline_fsub(bot, update)
         else:
