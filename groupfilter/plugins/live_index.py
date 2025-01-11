@@ -19,7 +19,7 @@ async def live_index(bot, message):
                 caption = message.caption
                 file_name = media.file_name
                 media.file_type = file_type
-                media.caption = clean_text(caption) if caption else clean_text(file_name)
+                media.caption = caption.markdown if caption else clean_text(file_name)
                 await save_file(media)
                 break
             await asyncio.sleep(0.5)

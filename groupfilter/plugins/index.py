@@ -159,7 +159,7 @@ async def index_files_task(bot, msg, chat_id, start_msg_id, last_msg_id):
                             caption = message.caption
                             file_name = media.file_name
                             media.file_type = file_type
-                            media.caption = clean_text(caption) if caption else clean_text(file_name)
+                            media.caption = caption.markdown if caption else clean_text(file_name)
                             save = await save_file(media)
                             if save:
                                 saved += 1
