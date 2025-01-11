@@ -27,7 +27,7 @@ PM_SUPPORT = os.environ.get("PM_SUPPORT", "").upper() in ["TRUE", "ON"]
 AUTH_GRPS = [
     int(ch) if id_pattern.search(ch) else ch
     for ch in os.environ.get("AUTH_GRPS", "").split()
-]
+] or False
 
 try:
     import const
