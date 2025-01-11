@@ -485,13 +485,3 @@ async def send_pm_file(admin_settings, bot, query, user_id, file_id, cbq):
             )
         except AttributeError as e:
             LOGGER.warning("Error occurred while deleting file: %s", str(e))
-
-
-@Client.on_message(
-    filters.private & filters.command(["clearcache"]) & filters.user(ADMINS)
-)
-async def clear_cache(bot, message=None, mess=True):
-    redis_client.flushall()
-    if mess:
-        LOGGER.warning("Stored cache cleared")
-        await message.reply_text("Stored cache cleared", quote=True)
