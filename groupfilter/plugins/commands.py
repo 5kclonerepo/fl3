@@ -54,7 +54,7 @@ async def start(bot, update):
                 term = update.command[1].split("search_", 1)[-1].replace("_", " ")
                 await filter_pm(bot, update, search=term)
             else:
-                await bot.reply_text(
+                await update.reply_text(
                     text="**PM mode is deactivated**",
                     quote=True,
                 )
