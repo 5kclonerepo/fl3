@@ -73,6 +73,9 @@ __`/indexlink <last message link>` or `/indexlink <start message link> <last mes
 ‣/notfoundimg - __Set image to send when file not found__ - Reply `/notfoundimg` to an image to set or  `/notfoundimg off` to remove
 ‣/fsubmsg - __Set force subscribe message__ - Reply `/fsubmsg` to a message to set or  `/fsubmsg off` to remove
 ‣/fsubimg - __Set force subscribe image__ - Reply `/fsubimg` to an image to set or  `/fsubimg off` to remove
+‣/addpromo - __Set promotional links between results__ - `/addpromo "Button Text" URL`
+‣/delpromo - __Delete promotional links between results__ - `/delpromo URL`
+‣/listpromos - __List all promotional links currently added in the DB__
 ‣/total - __Get count of total files in DB__
 """
 

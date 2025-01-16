@@ -1,6 +1,7 @@
 import asyncio
 import re
 import json
+import random
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -37,6 +38,7 @@ from groupfilter.db.settings_sql import (
 )
 from groupfilter.db.ban_sql import is_banned
 from groupfilter.db.filters_sql import is_filter
+from groupfilter.db.promo_sql import get_promos
 from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
 from groupfilter import LOGGER, ADMINS, AUTH_GRPS
 from __main__ import app
@@ -277,6 +279,10 @@ async def get_result(search, page_no, user_id, username, chat_id):
         search_md = "HyperLink"
     else:
         search_md = "Button"
+        
+    ads_list = await get_promos()
+    if ads_list:
+        ad_index = random.randint(0, len(ads_list) - 1)
 
     if files["files"]:
         btn = []
@@ -298,6 +304,12 @@ async def get_result(search, page_no, user_id, username, chat_id):
                 btn_count += 1
                 filename = f"**{index}.** [{file_name}](https://t.me/{username}/?start={file_id}_{user_id}) -\n`[{file_size}]`"
                 result += "\n" + filename
+                if btn_count == len(files["files"]) // 2 and ads_list:                  
+                    current_ad = ads_list[ad_index]
+                    AD_TEXT = current_ad['btn_txt']
+                    AD_URL = current_ad['link']
+                    AD_KB = f"**AD.** [{AD_TEXT}]({AD_URL})"
+                    result += "\n" + AD_KB
             elif list_mode == "ON":
                 index += 1
                 btn_count += 1
@@ -321,6 +333,14 @@ async def get_result(search, page_no, user_id, username, chat_id):
                     callback_data=f"file#{file_id}#{user_id}",
                 )
                 btn.append([btn_kb])
+                btn_count += 1
+                if btn_count == len(files["files"]) // 2 and ads_list:                  
+                    current_ad = ads_list[ad_index]
+                    AD_TEXT = current_ad['btn_txt']
+                    AD_URL = current_ad['link']
+                    AD_KB = InlineKeyboardButton(text=f"{AD_TEXT}", url=f'{AD_URL}')
+                    # ad_index = (ad_index + 1) % len(ads_list)
+                    btn.append([AD_KB])
 
         nxt_kb_cb = trim_button_text(f"nxt_pg {user_id} {page + 1} {search}", nod=True)
         prev_kb_cb = trim_button_text(
