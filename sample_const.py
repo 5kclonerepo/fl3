@@ -87,10 +87,11 @@ FSUB_HLP_MSG = """
 >**Force Subscription Management**
 >__Set, manage, or clear force subscribe channels.__ 
 
-‣ /forcesub - __Set force subscribe channel__ - `/forcesub channel_id/off` __or__ `/forcesub channel_id request`(for request channel) __Bot must be admin of that channel (Bot will create a new invite link for that channel)__
-‣ /forcesub2 - __Set force subscribe channel 2__ - `/forcesub2 channel_id/off` __or__ `/forcesub2 channel_id request`(for request channel) __Bot must be admin of that channel (Bot will create a new invite link for that channel)__
-‣ /fsubrequest - __Toggle force subscribe join request after adding force subscribe channel__ - `/fsubrequest on/off`
-‣ /fsubrequest2 - __Toggle force subscribe join request after adding force subscribe channel 2__ - `/fsubrequest2 on/off`
+‣ /setfsub - __Set force subscribe channel__ - `/forcesub channel_id/off` __Bot must be admin of that channel (Bot will create a new invite link)__
+‣ /setfsub2 - __Set 2nd force subscribe channel__
+‣ /setreqfsub - __Set request force subscribe channel__ - `/reqforcesub channel_id/off` __Bot must be admin of that channel (Bot will create a new invite link)__
+‣ /setreqfsub2 - __Set 2nd request force subscribe channel__
+‣ /checkfsubusers - __Check force subscribe users count__
 ‣ /clearfsubusers - __Clear all force subscribe users from db__
 ‣ /checklink - __Check invite link for force subscribe channel__
 """

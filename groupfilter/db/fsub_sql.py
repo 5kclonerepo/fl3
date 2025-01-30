@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy import Column, TEXT, BigInteger, Numeric
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -66,7 +66,9 @@ async def add_fsub_req_user(user_id, chat_id, fileid, msg_id):
             session.commit()
             return True
         except NoResultFound:
-            fltr = FsubReq(user_id=user_id, chat_id=chat_id, fileid=fileid, msg_id=msg_id)
+            fltr = FsubReq(
+                user_id=user_id, chat_id=chat_id, fileid=fileid, msg_id=msg_id
+            )
             session.add(fltr)
             session.commit()
             return True
@@ -131,7 +133,9 @@ async def add_fsub_reg_user(user_id, chat_id, fileid, msg_id):
             session.commit()
             return True
         except NoResultFound:
-            fltr = FsubReg(user_id=user_id, chat_id=chat_id, fileid=fileid, msg_id=msg_id)
+            fltr = FsubReg(
+                user_id=user_id, chat_id=chat_id, fileid=fileid, msg_id=msg_id
+            )
             session.add(fltr)
             session.commit()
             return True
@@ -204,3 +208,35 @@ async def remove_fsub_users():
             return False
         finally:
             session.close()
+
+
+async def get_fsubreq_users_count():
+    session = SESSION()
+    try:
+        results = (
+            session.query(FsubReq.chat_id, func.count(FsubReq.user_id).label("count"))
+            .filter(FsubReq.fileid == None)
+            .group_by(FsubReq.chat_id)
+            .all()
+        )
+
+        return results
+
+    finally:
+        session.close()
+
+
+async def get_fsubreg_users_count():
+    session = SESSION()
+    try:
+        results = (
+            session.query(FsubReg.chat_id, func.count(FsubReg.user_id).label("count"))
+            .filter(FsubReg.fileid == None)
+            .group_by(FsubReg.chat_id)
+            .all()
+        )
+
+        return results
+
+    finally:
+        session.close()

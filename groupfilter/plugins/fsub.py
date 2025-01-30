@@ -13,6 +13,8 @@ from groupfilter.db.fsub_sql import (
     is_req_user,
     add_fsub_reg_user,
     remove_fsub_users,
+    get_fsubreq_users_count,
+    get_fsubreg_users_count,
 )
 from groupfilter.db.settings_sql import get_admin_settings
 
@@ -136,6 +138,23 @@ async def log_file(bot, message):
     rem = await remove_fsub_users()
     if rem:
         await message.reply_text("All fsub users removed from database")
+    else:
+        await message.reply_text("No fsub users found in database")
+
+
+@Client.on_message(filters.command(["checkfsubusers"]) & filters.user(ADMINS))
+async def check_fsub_users(bot, message):
+    msg = ""
+    req_count = await get_fsubreq_users_count()
+    msg += "**Request Channel:**\n"
+    for chat in req_count:
+        msg += f"✧ `{chat.chat_id}`: `{chat.count}`\n"
+    reg_count = await get_fsubreg_users_count()
+    msg += "\n**Regular Channel:**\n"
+    for chat in reg_count:
+        msg += f"✧ `{chat.chat_id}`: `{chat.count}`\n"
+    if msg:
+        await message.reply_text(msg)
     else:
         await message.reply_text("No fsub users found in database")
 

@@ -342,7 +342,7 @@ async def caption_plus(bot, message):
 
 
 @Client.on_message(
-    filters.private & filters.command(["forcesub"]) & filters.user(ADMINS)
+    filters.private & filters.command(["setfsub"]) & filters.user(ADMINS)
 )
 async def force_sub(bot, update):
     data = update.text.split()
@@ -352,19 +352,9 @@ async def force_sub(bot, update):
             await set_channel_link(None)
             await update.reply_text("Force Subscription disabled")
             return
-        request = False
-    elif len(data) == 3:
-        channel = data[-2]
-        req = data[-1]
-        if req != "request":
-            await update.reply_text(
-                "Please send in proper format `/forcesub channel_id request` if you want to set join request"
-            )
-            return
-        request = True
     else:
         await update.reply_text(
-            "Please send in proper format `/forcesub channel_id/off`\n`/forcesub channel_id request` for join request"
+            "Please send in proper format `/setfsub channel_id/off`"
         )
         return
 
@@ -374,7 +364,7 @@ async def force_sub(bot, update):
 
     try:
         link = await bot.create_chat_invite_link(
-            int(channel), creates_join_request=request
+            int(channel), creates_join_request=False
         )
         inv_link = link.invite_link
     except Exception as e:
@@ -383,45 +373,35 @@ async def force_sub(bot, update):
 
     await set_channel_link(inv_link)
     await set_force_sub(int(channel))
-    await set_join_request(request)
+    await set_join_request(False)
     await update.reply_text(
-        f"Force Subscription channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: {request}"
+        f"Force Subscription channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: False"
     )
 
-
 @Client.on_message(
-    filters.private & filters.command(["fsubrequest"]) & filters.user(ADMINS)
+    filters.private & filters.command(["setreqfsub"]) & filters.user(ADMINS)
 )
-async def fsub_req(bot, update):
+async def req_force_sub(bot, update):
     data = update.text.split()
     if len(data) == 2:
-        req = data[-1]
-        if req.lower() == "off":
-            request = False
-        elif req.lower() == "on":
-            request = True
-        else:
-            await update.reply_text(
-                "Please send in proper format `/fsubrequest on/off` if you want to set join request"
-            )
+        channel = data[-1]
+        if channel.lower() == "off":
+            await set_channel_link(None)
+            await update.reply_text("Force Subscription disabled")
             return
     else:
         await update.reply_text(
-            "Please send in proper format `/fsubrequest on/off` if you want to set join request"
+            "Please send in proper format `/setreqfsub channel_id/off`"
         )
         return
 
-    channel = None
-    admin_settings = await get_admin_settings()
-    if admin_settings:
-        channel = admin_settings.fsub_channel
-        if not channel:
-            await update.reply_text("Please add fsub channel first")
-            return
+    if not channel.startswith("-100"):
+        await update.reply_text("Please check channel ID again")
+        return
 
     try:
         link = await bot.create_chat_invite_link(
-            int(channel), creates_join_request=request
+            int(channel), creates_join_request=True
         )
         inv_link = link.invite_link
     except Exception as e:
@@ -429,14 +409,15 @@ async def fsub_req(bot, update):
         return
 
     await set_channel_link(inv_link)
-    await set_join_request(request)
+    await set_force_sub(int(channel))
+    await set_join_request(True)
     await update.reply_text(
-        f"Join Request set to: {request}\nInvite link: {link.invite_link}"
+        f"Force Subscription channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: True"
     )
 
 
 @Client.on_message(
-    filters.private & filters.command(["forcesub2"]) & filters.user(ADMINS)
+    filters.private & filters.command(["setfsub2"]) & filters.user(ADMINS)
 )
 async def force_sub2(bot, update):
     data = update.text.split()
@@ -446,19 +427,9 @@ async def force_sub2(bot, update):
             await set_channel_link(None, add=True)
             await update.reply_text("Force Subscription 2 disabled")
             return
-        request = False
-    elif len(data) == 3:
-        channel = data[-2]
-        req = data[-1]
-        if req != "request":
-            await update.reply_text(
-                "Please send in proper format `/forcesub2 channel_id request` if you want to set join request"
-            )
-            return
-        request = True
     else:
         await update.reply_text(
-            "Please send in proper format `/forcesub2 channel_id/off`\n`/forcesub2 channel_id request` for join request"
+            "Please send in proper format `/setfsub2 channel_id/off`"
         )
         return
 
@@ -468,7 +439,7 @@ async def force_sub2(bot, update):
 
     try:
         link = await bot.create_chat_invite_link(
-            int(channel), creates_join_request=request
+            int(channel), creates_join_request=False
         )
         inv_link = link.invite_link
     except Exception as e:
@@ -477,45 +448,36 @@ async def force_sub2(bot, update):
 
     await set_channel_link(inv_link, add=True)
     await set_force_sub(int(channel), add=True)
-    await set_join_request(request, add=True)
+    await set_join_request(False, add=True)
     await update.reply_text(
-        f"Force Subscription 2 channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: {request}"
+        f"Force Subscription 2 channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: False"
     )
 
 
 @Client.on_message(
-    filters.private & filters.command(["fsubrequest2"]) & filters.user(ADMINS)
+    filters.private & filters.command(["setreqfsub2"]) & filters.user(ADMINS)
 )
-async def fsub_req2(bot, update):
+async def req_force_sub2(bot, update):
     data = update.text.split()
     if len(data) == 2:
-        req = data[-1]
-        if req.lower() == "off":
-            request = False
-        elif req.lower() == "on":
-            request = True
-        else:
-            await update.reply_text(
-                "Please send in proper format `/fsubrequest2 on/off` if you want to set join request"
-            )
+        channel = data[-1]
+        if channel.lower() == "off":
+            await set_channel_link(None, add=True)
+            await update.reply_text("Force Subscription 2 disabled")
             return
     else:
         await update.reply_text(
-            "Please send in proper format `/fsubrequest2 on/off` if you want to set join request"
+            "Please send in proper format `/setreqfsub2 channel_id/off`"
         )
         return
 
-    channel = None
-    admin_settings = await get_admin_settings()
-    if admin_settings:
-        channel = admin_settings.fsub_channel2
-        if not channel:
-            await update.reply_text("Please add fsub channel 2 first")
-            return
+    if not channel.startswith("-100"):
+        await update.reply_text("Please check channel ID again")
+        return
 
     try:
         link = await bot.create_chat_invite_link(
-            int(channel), creates_join_request=request
+            int(channel), creates_join_request=True
         )
         inv_link = link.invite_link
     except Exception as e:
@@ -523,11 +485,11 @@ async def fsub_req2(bot, update):
         return
 
     await set_channel_link(inv_link, add=True)
-    await set_join_request(request, add=True)
+    await set_force_sub(int(channel), add=True)
+    await set_join_request(True, add=True)
     await update.reply_text(
-        f"Join Request 2 set to: {request}\nInvite link: {link.invite_link}"
+        f"Force Subscription 2 channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: True"
     )
-
 
 @Client.on_message(
     filters.private & filters.command(["checklink"]) & filters.user(ADMINS)
