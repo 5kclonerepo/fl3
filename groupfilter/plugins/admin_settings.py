@@ -5,9 +5,6 @@ from groupfilter.db.settings_sql import (
     set_repair_mode,
     set_auto_delete,
     set_custom_caption,
-    set_force_sub,
-    set_channel_link,
-    get_link,
     set_captionplus,
     set_info_msg,
     set_info_img,
@@ -16,7 +13,7 @@ from groupfilter.db.settings_sql import (
     set_unavail_msg,
     set_unavail_img,
     set_button_delete,
-    set_join_request,
+    set_fsub_count,
     set_fsub_msg,
     set_fsub_img,
 )
@@ -79,9 +76,6 @@ async def admin_settings_(bot, update):
     admin_settings = await get_admin_settings()
     auto_delete = admin_settings.auto_delete
     custom_caption = admin_settings.custom_caption
-    fsub_channel = admin_settings.fsub_channel
-    invite_link = admin_settings.channel_link
-    join_req = admin_settings.join_req
     caption_uname = admin_settings.caption_uname
     repair_mode = admin_settings.repair_mode
     info_msg = admin_settings.info_msg
@@ -109,19 +103,8 @@ async def admin_settings_(bot, update):
     if not custom_caption:
         custom_caption = "Disabled"
 
-    if not fsub_channel:
-        fsub_channel = "Disabled"
-
     if not caption_uname:
         caption_uname = "Disabled"
-
-    if not invite_link:
-        invite_link = "Disabled"
-
-    if join_req:
-        join_req = "Enabled"
-    else:
-        join_req = "Disabled"
 
     if repair_mode:
         repair_mode = "Enabled"
@@ -167,7 +150,7 @@ async def admin_settings_(bot, update):
 
     await bot.send_message(
         chat_id=user_id,
-        text=f"**Below are your current settings.**\n\n**Repair Mode:** `{repair_mode}`\n**Auto Delete:** `{auto_delete}`\n**Button Delete:** `{btn_del}`\n**Custom Caption:** `{custom_caption}`\n**Force Sub:** `{fsub_channel}`\n**Channel Link:** `{invite_link}`\n**Join Request:** `{join_req}`\n**Caption Username:** `{caption_uname}`\n**Info Message:** `{info_msg}`\n**Info Image:** `{info_img}`\n**Delete Message:** `{del_msg}`\n**Delete Image:** `{del_img}`\n**Not Found Message:** `{notfound_msg}`\n**Not Found Image:** `{notfound_img}`\nfsub Message:** `{fsub_msg}`\n**fsub Image:** `{fsub_img}`\n**Admins:** {admins} \n**DB Channels:** {dbchannel}",
+        text=f"**Below are your current settings.**\n\n**Repair Mode:** `{repair_mode}`\n**Auto Delete:** `{auto_delete}`\n**Button Delete:** `{btn_del}`\n**Custom Caption:** `{custom_caption}`\n**Caption Username:** `{caption_uname}`\n**Info Message:** `{info_msg}`\n**Info Image:** `{info_img}`\n**Delete Message:** `{del_msg}`\n**Delete Image:** `{del_img}`\n**Not Found Message:** `{notfound_msg}`\n**Not Found Image:** `{notfound_img}`\n**Fsub Message:** `{fsub_msg}`\n**Fsub Image:** `{fsub_img}`\n**Admins:** {admins} \n**DB Channels:** {dbchannel}",
     )
 
 
@@ -212,8 +195,8 @@ async def addfilter(client, message):
             "Please use the correct format: `/addfilter keyword` and reply to the message with the filter text."
         )
         return
-    
-    reply_msg = message.reply_to_message    
+
+    reply_msg = message.reply_to_message
     media_type = None
     file_id = None
 
@@ -238,7 +221,9 @@ async def addfilter(client, message):
         file_id = reply_msg.sticker.file_id
         filter_text = None
     else:
-        await message.reply_text("Unsupported format, please reply to a message with text, photo, video, gif or sticker.")
+        await message.reply_text(
+            "Unsupported format, please reply to a message with text, photo, video, gif or sticker."
+        )
         return
 
     filter_word = command_text[1].lower()
@@ -339,179 +324,6 @@ async def caption_plus(bot, message):
     caption = message.reply_to_message.text.markdown
     await set_captionplus(caption)
     await message.reply_text(f"Additional caption set to {caption}")
-
-
-@Client.on_message(
-    filters.private & filters.command(["setfsub"]) & filters.user(ADMINS)
-)
-async def force_sub(bot, update):
-    data = update.text.split()
-    if len(data) == 2:
-        channel = data[-1]
-        if channel.lower() == "off":
-            await set_channel_link(None)
-            await update.reply_text("Force Subscription disabled")
-            return
-    else:
-        await update.reply_text(
-            "Please send in proper format `/setfsub channel_id/off`"
-        )
-        return
-
-    if not channel.startswith("-100"):
-        await update.reply_text("Please check channel ID again")
-        return
-
-    try:
-        link = await bot.create_chat_invite_link(
-            int(channel), creates_join_request=False
-        )
-        inv_link = link.invite_link
-    except Exception as e:
-        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
-        return
-
-    await set_channel_link(inv_link)
-    await set_force_sub(int(channel))
-    await set_join_request(False)
-    await update.reply_text(
-        f"Force Subscription channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: False"
-    )
-
-@Client.on_message(
-    filters.private & filters.command(["setreqfsub"]) & filters.user(ADMINS)
-)
-async def req_force_sub(bot, update):
-    data = update.text.split()
-    if len(data) == 2:
-        channel = data[-1]
-        if channel.lower() == "off":
-            await set_channel_link(None)
-            await update.reply_text("Force Subscription disabled")
-            return
-    else:
-        await update.reply_text(
-            "Please send in proper format `/setreqfsub channel_id/off`"
-        )
-        return
-
-    if not channel.startswith("-100"):
-        await update.reply_text("Please check channel ID again")
-        return
-
-    try:
-        link = await bot.create_chat_invite_link(
-            int(channel), creates_join_request=True
-        )
-        inv_link = link.invite_link
-    except Exception as e:
-        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
-        return
-
-    await set_channel_link(inv_link)
-    await set_force_sub(int(channel))
-    await set_join_request(True)
-    await update.reply_text(
-        f"Force Subscription channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: True"
-    )
-
-
-@Client.on_message(
-    filters.private & filters.command(["setfsub2"]) & filters.user(ADMINS)
-)
-async def force_sub2(bot, update):
-    data = update.text.split()
-    if len(data) == 2:
-        channel = data[-1]
-        if channel.lower() == "off":
-            await set_channel_link(None, add=True)
-            await update.reply_text("Force Subscription 2 disabled")
-            return
-    else:
-        await update.reply_text(
-            "Please send in proper format `/setfsub2 channel_id/off`"
-        )
-        return
-
-    if not channel.startswith("-100"):
-        await update.reply_text("Please check channel ID again")
-        return
-
-    try:
-        link = await bot.create_chat_invite_link(
-            int(channel), creates_join_request=False
-        )
-        inv_link = link.invite_link
-    except Exception as e:
-        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
-        return
-
-    await set_channel_link(inv_link, add=True)
-    await set_force_sub(int(channel), add=True)
-    await set_join_request(False, add=True)
-    await update.reply_text(
-        f"Force Subscription 2 channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: False"
-    )
-
-
-@Client.on_message(
-    filters.private & filters.command(["setreqfsub2"]) & filters.user(ADMINS)
-)
-async def req_force_sub2(bot, update):
-    data = update.text.split()
-    if len(data) == 2:
-        channel = data[-1]
-        if channel.lower() == "off":
-            await set_channel_link(None, add=True)
-            await update.reply_text("Force Subscription 2 disabled")
-            return
-    else:
-        await update.reply_text(
-            "Please send in proper format `/setreqfsub2 channel_id/off`"
-        )
-        return
-
-    if not channel.startswith("-100"):
-        await update.reply_text("Please check channel ID again")
-        return
-
-    try:
-        link = await bot.create_chat_invite_link(
-            int(channel), creates_join_request=True
-        )
-        inv_link = link.invite_link
-    except Exception as e:
-        await update.reply_text(f" Error while creating channel invite link: {str(e)}")
-        return
-
-    await set_channel_link(inv_link, add=True)
-    await set_force_sub(int(channel), add=True)
-    await set_join_request(True, add=True)
-    await update.reply_text(
-        f"Force Subscription 2 channel set to `{channel}`\nInvite link: {link.invite_link}\nJoin Request: True"
-    )
-
-@Client.on_message(
-    filters.private & filters.command(["checklink"]) & filters.user(ADMINS)
-)
-async def testlink(bot, update):
-    link1, link2 = await get_link()
-    if link1 and link2:
-        await update.reply_text(
-            f"Invite link for force subscription channel 1: {link1}\nInvite link 2 for force subscription channel 2: {link2}"
-        )
-    elif link1:
-        await update.reply_text(
-            f"Invite link for force subscription channel 1: {link1}"
-        )
-    elif link2:
-        await update.reply_text(
-            f"Invite link for force subscription channel 2: {link2}"
-        )
-    else:
-        await update.reply_text(
-            "Force Subscription is disabled, please enable it first"
-        )
 
 
 @Client.on_message(filters.private & filters.command(["total"]) & filters.user(ADMINS))
@@ -796,3 +608,19 @@ async def button_delete_(bot, update):
 
     else:
         await update.reply_text("Please send in proper format `/buttondel seconds`")
+
+@Client.on_message(
+    filters.private & filters.command(["setfsubcount"]) & filters.user(ADMINS)
+)
+async def set_fsub_count_(bot, update):
+    data = update.text.split()
+    if len(data) == 2:
+        count = data[-1]
+        await set_fsub_count(int(count))
+        if count:
+            await update.reply_text(f"Maximum Fsub count set to `{count}`")
+        if count == 0:
+            await update.reply_text("Fsub count disabled")
+
+    else:
+        await update.reply_text("Please send in proper format `/setfsubcount count`")

@@ -1,14 +1,18 @@
 import uvloop
-from pyrogram import Client, idle, __version__
-from pyrogram.raw.all import layer
-from groupfilter import APP_ID, API_HASH, BOT_TOKEN, PM_SUPPORT
 
 uvloop.install()
+
+import asyncio  # noqa
+from pyropatch import pyropatch  # noqa
+from pyrogram import Client, idle, __version__  # noqa
+from pyrogram.raw.all import layer  # noqa
+from groupfilter import APP_ID, API_HASH, BOT_TOKEN, PM_SUPPORT, LOGGER  # noqa
+
 
 app = None
 
 if PM_SUPPORT:
-    plugins = dict(root="groupfilter.plugins")
+    plugins = {"root": "groupfilter.plugins"}
 else:
     plugins = {"root": "groupfilter.plugins", "exclude": ["serve_pm"]}
 
@@ -24,11 +28,17 @@ async def main():
     )
     async with app:
         me = await app.get_me()
-        print(
-            f"{me.first_name} - @{me.username} - Pyrogram v{__version__} (Layer {layer}) - Started..."
+        LOGGER.info(
+            "%s - @%s - Pyrogram v%s (Layer %s) - Started...",
+            me.first_name,
+            me.username,
+            __version__,
+            layer,
         )
         await idle()
-        print(f"{me.first_name} - @{me.username} - Stopped !!!")
+        LOGGER.info("%s - @%s - Stopped !!!", me.first_name, me.username)
 
 
-uvloop.run(main())
+# uvloop.run(main())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())

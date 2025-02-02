@@ -22,12 +22,9 @@ from pyrogram.errors import (
     FloodWait,
     UserIsBlocked,
 )
-from groupfilter.plugins.fsub import check_fsub
 from groupfilter.db.files_sql import (
     get_filter_results,
     get_file_details,
-    # get_precise_filter_results,
-    redis_client,
 )
 from groupfilter.db.settings_sql import (
     get_search_settings,
@@ -36,9 +33,10 @@ from groupfilter.db.settings_sql import (
 from groupfilter.db.ban_sql import is_banned
 from groupfilter.db.filters_sql import is_filter
 from groupfilter.db.promo_sql import get_promos
+from groupfilter.plugins.fsub import is_fsub
 from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
 from groupfilter.plugins.serve import scheduler, del_message, get_size, trim_button_text
-from groupfilter import LOGGER, ADMINS
+from groupfilter import LOGGER
 
 
 @Client.on_message(
@@ -67,23 +65,32 @@ async def filter_pm(bot, message, search=None):
         if fltr.buttons:
             btn_data = json.loads(fltr.buttons)
             btns = [
-            [InlineKeyboardButton(text=button['text'], url=button['url']) for button in row]
-            for row in btn_data
+                [
+                    InlineKeyboardButton(text=button["text"], url=button["url"])
+                    for button in row
+                ]
+                for row in btn_data
             ]
-            btns = InlineKeyboardMarkup(btns)            
+            btns = InlineKeyboardMarkup(btns)
         if fltr.media_type == "photo":
-            await message.reply_photo(fltr.file_id, caption=fltr.message, reply_markup=btns)
+            await message.reply_photo(
+                fltr.file_id, caption=fltr.message, reply_markup=btns
+            )
         elif fltr.media_type == "video":
-            await message.reply_video(fltr.file_id, caption=fltr.message, reply_markup=btns)
+            await message.reply_video(
+                fltr.file_id, caption=fltr.message, reply_markup=btns
+            )
         elif fltr.media_type == "animation":
-            await message.reply_animation(fltr.file_id, caption=fltr.message, reply_markup=btns)
+            await message.reply_animation(
+                fltr.file_id, caption=fltr.message, reply_markup=btns
+            )
         elif fltr.media_type == "sticker":
             await message.reply_sticker(fltr.file_id)
         elif fltr.media_type == "text":
             await message.reply_text(
                 text=fltr.message,
                 quote=True,
-                reply_markup=btns, 
+                reply_markup=btns,
                 parse_mode=ParseMode.MARKDOWN,
             )
         else:
@@ -231,29 +238,12 @@ async def pages(bot, query):
 
 async def get_pm_result(search, page_no, user_id, username, chat_id):
     search_settings = await get_search_settings(chat_id)
-
-    if search_settings and search_settings.precise_mode:
-        # files = await get_precise_filter_results(query=search, page=page_no)
-        precise_search = "Enabled"
-    else:
-        pass
-
     files = await get_filter_results(query=search, page=page_no)
-    precise_search = "Disabled"
-
     count = int(files["total_count"])
 
     button_mode = "ON" if search_settings and search_settings.button_mode else "OFF"
     link_mode = "ON" if search_settings and search_settings.link_mode else "OFF"
-    list_mode = "ON" if search_settings and search_settings.list_mode else "OFF"
 
-    if list_mode == "ON" and link_mode == "OFF":
-        search_md = "List Button"
-    elif list_mode == "OFF" and link_mode == "ON":
-        search_md = "HyperLink"
-    else:
-        search_md = "Button"        
-        
     ads_list = await get_promos()
     if ads_list:
         ad_index = random.randint(0, len(ads_list) - 1)
@@ -278,27 +268,13 @@ async def get_pm_result(search, page_no, user_id, username, chat_id):
                 btn_count += 1
                 filename = f"**{index}.** [{file_name}](https://t.me/{username}/?start=pm_{file_id}) -\n`[{file_size}]`"
                 result += "\n" + filename
-                if btn_count == len(files["files"]) // 2 and ads_list:                  
+                if btn_count == len(files["files"]) // 2 and ads_list:
                     current_ad = ads_list[ad_index]
-                    AD_TEXT = current_ad['btn_txt']
-                    AD_URL = current_ad['link']
+                    AD_TEXT = current_ad["btn_txt"]
+                    AD_URL = current_ad["link"]
                     AD_KB = f"**AD.** [{AD_TEXT}]({AD_URL})"
                     result += "\n" + AD_KB
-            elif list_mode == "ON":
-                index += 1
-                btn_count += 1
-                filename = f"**{index}.** `{file_name}` - `[{file_size}]`"
-                result += "\n" + filename
-                btn_kb = InlineKeyboardButton(
-                    text=f"{index}", callback_data=f"pmfile#{file_id}"
-                )
-                if btn_count == 1 or btn_count == 6:
-                    btn.append([btn_kb])
-                elif 6 > btn_count > 1:
-                    btn[0].append(btn_kb)
-                else:
-                    btn[1].append(btn_kb)
-            else:
+            elif button_mode == "ON":
                 tr_f_name = trim_button_text(file_name)
                 filename = f"[{file_size}] {tr_f_name}"
                 btn_kb = InlineKeyboardButton(
@@ -307,11 +283,11 @@ async def get_pm_result(search, page_no, user_id, username, chat_id):
                 )
                 btn.append([btn_kb])
                 btn_count += 1
-                if btn_count == len(files["files"]) // 2 and ads_list:                  
+                if btn_count == len(files["files"]) // 2 and ads_list:
                     current_ad = ads_list[ad_index]
-                    AD_TEXT = current_ad['btn_txt']
-                    AD_URL = current_ad['link']
-                    AD_KB = InlineKeyboardButton(text=f"{AD_TEXT}", url=f'{AD_URL}')
+                    AD_TEXT = current_ad["btn_txt"]
+                    AD_URL = current_ad["link"]
+                    AD_KB = InlineKeyboardButton(text=f"{AD_TEXT}", url=f"{AD_URL}")
                     # ad_index = (ad_index + 1) % len(ads_list)
                     btn.append([AD_KB])
 
@@ -340,9 +316,7 @@ async def get_pm_result(search, page_no, user_id, username, chat_id):
         if kb:
             btn.append(kb)
 
-        if list_mode == "ON":
-            result += "\n🔻__Tap on the corresponding file number button and then start to download.__🔻"
-        elif link_mode == "ON":
+        if link_mode == "ON":
             result += "\n__Tap on the file name and then start to download.__"
         else:
             result += "\n🔻__Tap on the file button and then start to download.__🔻"
@@ -356,10 +330,10 @@ async def get_pm_result(search, page_no, user_id, username, chat_id):
 async def get_pm_files(bot, query):
     user_id = query.from_user.id
     if isinstance(query, CallbackQuery):
+        cbq = True
         try:
             file_id = query.data.split("#")[1]
             await query.answer("Sending file...", cache_time=10)
-            cbq = True
         except QueryIdInvalid:
             await bot.send_message(
                 user_id,
@@ -367,6 +341,7 @@ async def get_pm_files(bot, query):
                 reply_to_message_id=query.message.reply_to_message_id,
             )
     elif isinstance(query, Message):
+        cbq = False
         mesg = query
         file_query = query.text.split()[1]
         fid_sp = file_query.split("_")
@@ -387,47 +362,11 @@ async def get_pm_files(bot, query):
         await mesg.reply_text("You are banned. You can't use this bot.", quote=True)
         return
 
-    force_sub, request, link, force_sub2, request2, link2 = (
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    )
-
     admin_settings = await get_admin_settings()
+    
+    if not await is_fsub(bot, query, user_id, file_id, admin_settings):
+        return
 
-    if admin_settings:
-        force_sub = admin_settings.fsub_channel
-        link = admin_settings.channel_link
-        if link:
-            request = admin_settings.join_req
-            uc_one = await check_fsub(
-                bot, query, force_sub, link, request, user_id, file_id, admin_settings
-            )
-
-            if not uc_one:
-                return
-
-        force_sub2 = admin_settings.fsub_channel2
-        link2 = admin_settings.channel_link2
-        if link2:
-            request2 = admin_settings.join_req2
-            uc_two = await check_fsub(
-                bot,
-                query,
-                force_sub2,
-                link2,
-                request2,
-                user_id,
-                file_id,
-                admin_settings,
-            )
-            if not uc_two:
-                return
-
-        cbq = False
     await send_pm_file(admin_settings, bot, query, user_id, file_id, cbq)
 
 

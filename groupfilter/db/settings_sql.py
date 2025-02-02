@@ -16,13 +16,8 @@ class AdminSettings(BASE):
     setting_name = Column(TEXT, primary_key=True)
     auto_delete = Column(Numeric)
     custom_caption = Column(TEXT)
-    fsub_channel = Column(Numeric)
-    fsub_channel2 = Column(Numeric)
-    channel_link = Column(TEXT)
-    channel_link2 = Column(TEXT)
-    join_req = Column(Boolean)
-    join_req2 = Column(Boolean)
     caption_uname = Column(TEXT)
+    fsub_channel = Column(Numeric)
     repair_mode = Column(Boolean)
     info_msg = Column(TEXT)
     del_msg = Column(TEXT)
@@ -38,13 +33,8 @@ class AdminSettings(BASE):
         self.setting_name = setting_name
         self.auto_delete = 0
         self.custom_caption = None
-        self.fsub_channel = None
-        self.fsub_channel2 = None
-        self.channel_link = None
-        self.channel_link2 = None
-        self.join_req = False
-        self.join_req2 = False
         self.caption_uname = None
+        self.fsub_channel = None
         self.repair_mode = False
         self.info_msg = None
         self.del_msg = None
@@ -190,71 +180,6 @@ async def set_custom_caption(caption):
         LOGGER.warning("Error setting custom caption: %s ", str(e))
 
 
-async def set_force_sub(channel, add=False):
-    try:
-        with INSERTION_LOCK:
-            session = SESSION()
-            admin_setting = session.query(AdminSettings).first()
-            if not admin_setting:
-                admin_setting = AdminSettings(setting_name="default")
-                session.add(admin_setting)
-                session.commit()
-
-            if add:
-                admin_setting.fsub_channel2 = channel
-            else:
-                admin_setting.fsub_channel = channel
-            session.commit()
-
-    except Exception as e:
-        LOGGER.warning("Error setting Force Sub channel: %s ", str(e))
-
-
-async def set_channel_link(link, add=False):
-    try:
-        with INSERTION_LOCK:
-            session = SESSION()
-            admin_setting = session.query(AdminSettings).first()
-            if not admin_setting:
-                admin_setting = AdminSettings(setting_name="default")
-                session.add(admin_setting)
-                session.commit()
-
-            if add:
-                admin_setting.channel_link2 = link
-            else:
-                admin_setting.channel_link = link
-            session.commit()
-
-    except Exception as e:
-        LOGGER.warning("Error adding Force Sub channel link: %s ", str(e))
-
-
-async def get_channel():
-    try:
-        channel = SESSION.query(AdminSettings.fsub_channel).first()
-        if channel:
-            return channel[0]
-        return False
-    except NoResultFound:
-        return False
-    finally:
-        SESSION.close()
-
-
-async def get_link():
-    try:
-        link = SESSION.query(AdminSettings.channel_link).first()
-        link2 = SESSION.query(AdminSettings.channel_link2).first()
-        if link:
-            return link[0], link2[0]
-        return False, False
-    except NoResultFound:
-        return False, False
-    finally:
-        SESSION.close()
-
-
 async def set_captionplus(username):
     try:
         with INSERTION_LOCK:
@@ -396,7 +321,7 @@ async def set_button_delete(dur):
         LOGGER.warning("Error setting button delete: %s ", str(e))
 
 
-async def set_join_request(request, add = False):
+async def set_fsub_count(count):
     try:
         with INSERTION_LOCK:
             session = SESSION()
@@ -406,14 +331,11 @@ async def set_join_request(request, add = False):
                 session.add(admin_setting)
                 session.commit()
 
-            if add:
-                admin_setting.join_req2 = request
-            else:
-                admin_setting.join_req = request
+            admin_setting.fsub_channel = count
             session.commit()
 
     except Exception as e:
-        LOGGER.warning("Error setting join request: %s ", str(e))
+        LOGGER.warning("Error setting fsub count: %s ", str(e))
 
 
 async def set_fsub_msg(message):

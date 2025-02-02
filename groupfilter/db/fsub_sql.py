@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, func
-from sqlalchemy import Column, TEXT, BigInteger, Numeric
+from sqlalchemy import Column, TEXT, BigInteger, Numeric, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.orm.exc import NoResultFound
@@ -9,6 +9,42 @@ import asyncio
 
 
 BASE = declarative_base()
+
+
+class ForceSub(BASE):
+    __tablename__ = "forcesub"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    chat_id = Column(Numeric)
+    chat_title = Column(TEXT)
+    chat_link = Column(TEXT)
+    join_count = Column(Numeric)
+    target = Column(Numeric)
+    is_req = Column(Boolean)
+    is_active = Column(Boolean)
+    is_done = Column(Boolean)
+    is_queue = Column(Boolean)
+
+    def __init__(
+        self,
+        chat_id,
+        chat_title,
+        chat_link,
+        join_count,
+        target,
+        is_req,
+        is_active,
+        is_done,
+        is_queue,
+    ):
+        self.chat_id = chat_id
+        self.chat_title = chat_title
+        self.chat_link = chat_link
+        self.join_count = join_count
+        self.target = target
+        self.is_req = is_req
+        self.is_active = is_active
+        self.is_done = is_done
+        self.is_queue = is_queue
 
 
 class FsubReq(BASE):
@@ -50,6 +86,198 @@ def start() -> scoped_session:
 
 SESSION = start()
 INSERTION_LOCK = asyncio.Lock()
+
+
+async def set_force_sub(
+    chat_id,
+    chat_title,
+    chat_link,
+    join_count,
+    target,
+    is_req,
+    is_active=True,
+    is_done=False,
+    is_queue=False,
+):
+    try:
+        async with INSERTION_LOCK:
+            session = SESSION()
+            sub = session.query(ForceSub).filter(ForceSub.chat_id == chat_id).first()
+            if not sub:
+                sub = ForceSub(
+                    chat_id=chat_id,
+                    chat_title=chat_title,
+                    chat_link=chat_link,
+                    join_count=join_count,
+                    target=target,
+                    is_req=is_req,
+                    is_active=is_active,
+                    is_done=is_done,
+                    is_queue=is_queue,
+                )
+                session.add(sub)
+                session.commit()
+                return True
+            else:
+                return "exists"
+    except Exception as e:
+        LOGGER.warning("Error setting Force Sub channel: %s ", str(e))
+        return False
+
+
+async def update_force_sub(
+    chat_id=None,
+    chat_title=None,
+    chat_link=None,
+    join_count=None,
+    target=None,
+    is_req=None,
+    is_active=None,
+    is_done=None,
+    is_queue=None,
+):
+    try:
+        async with INSERTION_LOCK:
+            session = SESSION()
+            sub = session.query(ForceSub).filter(ForceSub.chat_id == chat_id).first()
+            if sub:
+                if chat_link is not None:
+                    sub.chat_link = chat_link
+                if chat_title is not None:
+                    sub.chat_title = chat_title
+                if join_count is not None:
+                    sub.join_count = join_count
+                if target is not None:
+                    sub.target = target
+                if is_req is not None:
+                    sub.is_req = is_req
+                if is_active is not None:
+                    sub.is_active = is_active
+                if is_done is not None:
+                    sub.is_done = is_done
+                if is_queue is not None:
+                    sub.is_queue = is_queue
+                session.commit()
+                return True
+            else:
+                return False
+    except Exception as e:
+        LOGGER.warning("Error updating Force Sub channel: %s ", str(e))
+        return False
+
+
+async def get_force_sub(chat_id):
+    try:
+        async with INSERTION_LOCK:
+            session = SESSION()
+            sub = session.query(ForceSub).filter(ForceSub.chat_id == chat_id).first()
+            return sub
+    except Exception as e:
+        LOGGER.warning("Error getting Force Sub channel: %s ", str(e))
+        return None
+
+
+async def get_pen_force_subs():
+    try:
+        async with INSERTION_LOCK:
+            session = SESSION()
+            sub = (
+                session.query(ForceSub)
+                .filter(ForceSub.is_done == False, ForceSub.is_active == False)
+                .all()
+                .order_by(ForceSub.id.asc())
+            )
+            return sub
+    except Exception as e:
+        LOGGER.warning("Error getting Force Sub channel: %s ", str(e))
+        return None
+
+async def get_act_force_subs_count():
+    try:
+        async with INSERTION_LOCK:
+            session = SESSION()
+            sub = (
+                session.query(ForceSub)
+                .filter(ForceSub.is_done == False, ForceSub.is_active == True)
+                .count()
+            )
+            return sub
+    except Exception as e:
+        LOGGER.warning("Error getting Force Sub channel: %s ", str(e))
+        return None
+
+async def get_nxt_pen_force_sub():
+    try:
+        async with INSERTION_LOCK:
+            session = SESSION()
+            sub = (
+                session.query(ForceSub)
+                .filter(ForceSub.is_done == False, ForceSub.is_active == False)
+                .order_by(ForceSub.id.asc())
+                .first()
+            )
+            return sub
+    except Exception as e:
+        LOGGER.warning("Error getting Force Sub channel: %s ", str(e))
+        return None
+
+
+async def get_active_force_subs():
+    try:
+        async with INSERTION_LOCK:
+            session = SESSION()
+            sub = (
+                session.query(ForceSub)
+                .filter(ForceSub.is_active == True, ForceSub.is_queue == False)
+                .all()
+            )
+            return sub
+    except Exception as e:
+        LOGGER.warning("Error getting Force Sub channel: %s", str(e))
+        return None
+
+
+async def get_all_force_subs():
+    try:
+        async with INSERTION_LOCK:
+            session = SESSION()
+            sub = session.query(ForceSub).all()
+            return sub
+    except Exception as e:
+        LOGGER.warning("Error getting Force Sub channel: %s ", str(e))
+        return None
+
+
+async def rm_force_sub(chat_id):
+    async with INSERTION_LOCK:
+        session = SESSION()
+        try:
+            result = (
+                session.query(ForceSub).filter(ForceSub.chat_id == chat_id).delete()
+            )
+            session.commit()
+            return result > 0
+        except Exception as e:
+            session.rollback()
+            LOGGER.warning(
+                "Error occurred while deleting Force Sub channel: %s", str(e)
+            )
+            return False
+
+
+async def clear_force_subs():
+    async with INSERTION_LOCK:
+        session = SESSION()
+        try:
+            result = session.query(ForceSub).delete()
+            session.commit()
+            return result > 0
+        except Exception as e:
+            session.rollback()
+            LOGGER.warning(
+                "Error occurred while deleting all Force Sub channels: %s", str(e)
+            )
+            return False
 
 
 async def add_fsub_req_user(user_id, chat_id, fileid, msg_id):

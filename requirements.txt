@@ -7,6 +7,7 @@ pymediainfo
 pyrotgfork
 PySocks==1.7.1
 python-dotenv
+git+https://github.com/rahulps1000/pyropatch.git@pyrotgfork
 pytz
 six==1.16.0
 SQLAlchemy==2.0.30

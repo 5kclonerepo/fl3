@@ -1,5 +1,13 @@
 import psycopg2
-from groupfilter import ADMINS, DB_URL
+from groupfilter import ADMINS, DB_URL, LOGGER
+
+
+async def notify_admins(bot, message):
+    for admin in ADMINS:
+        try:
+            await bot.send_message(chat_id=admin, text=message)
+        except Exception as e:
+            LOGGER.warning("Error while sending message to admin %s: %s", admin, str(e))
 
 
 def is_admin(user_id):

@@ -25,7 +25,6 @@ from pyrogram.errors import (
     MessageIdInvalid,
     FloodWait,
 )
-from groupfilter.plugins.fsub import check_fsub
 from groupfilter.db.files_sql import (
     get_filter_results,
     get_file_details,
@@ -39,6 +38,7 @@ from groupfilter.db.settings_sql import (
 from groupfilter.db.ban_sql import is_banned
 from groupfilter.db.filters_sql import is_filter
 from groupfilter.db.promo_sql import get_promos
+from groupfilter.plugins.fsub import is_fsub
 from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
 from groupfilter import LOGGER, ADMINS, AUTH_GRPS
 from __main__ import app
@@ -443,43 +443,11 @@ async def get_files(bot, query):
         await mesg.reply_text("You are banned. You can't use this bot.", quote=True)
         return
 
-    force_sub, request, link, force_sub2, request2, link2 = (
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    )
 
     admin_settings = await get_admin_settings()
-
-    if admin_settings:
-        force_sub = admin_settings.fsub_channel
-        link = admin_settings.channel_link
-        if link:
-            request = admin_settings.join_req
-            uc_one = await check_fsub(
-                bot, query, force_sub, link, request, user_id, file_id, admin_settings
-            )
-            if not uc_one:
-                return
-        force_sub2 = admin_settings.fsub_channel2
-        link2 = admin_settings.channel_link2
-        if link2:
-            request2 = admin_settings.join_req2
-            uc_two = await check_fsub(
-                bot,
-                query,
-                force_sub2,
-                link2,
-                request2,
-                user_id,
-                file_id,
-                admin_settings,
-            )
-            if not uc_two:
-                return
+    
+    if not await is_fsub(bot, query, user_id, file_id, admin_settings):
+        return
 
     await send_file(admin_settings, bot, query, user_id, file_id)
 
