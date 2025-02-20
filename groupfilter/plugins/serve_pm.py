@@ -274,7 +274,7 @@ async def get_pm_result(search, page_no, user_id, username, chat_id):
                     AD_URL = current_ad["link"]
                     AD_KB = f"**AD.** [{AD_TEXT}]({AD_URL})"
                     result += "\n" + AD_KB
-            elif button_mode == "ON":
+            else:
                 tr_f_name = trim_button_text(file_name)
                 filename = f"[{file_size}] {tr_f_name}"
                 btn_kb = InlineKeyboardButton(
