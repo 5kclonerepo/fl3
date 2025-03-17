@@ -211,3 +211,9 @@ async def getfileid(bot, update):
         await update.reply_text(f"File ID: `{msg.audio.file_id}`")
     elif msg.sticker:
         await update.reply_text(f"File ID: `{msg.sticker.file_id}`")
+    elif msg.photo:
+        await update.reply_text(f"File ID: `{msg.photo.file_id}`")
+    elif msg.voice:
+        await update.reply_text(f"File ID: `{msg.voice.file_id}`")
+    elif msg.video_note:
+        await update.reply_text(f"File ID: `{msg.video_note.file_id}`")
