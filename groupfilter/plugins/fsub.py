@@ -531,7 +531,7 @@ async def check_fsub(
     try:
         user = await bot.get_chat_member(int(force_sub), user_id)
         if user.status == ChatMemberStatus.BANNED:
-            await msg.reply_text("Sorry, you are Banned to use me.", quote=True)
+            await msg.reply_text("Sorry, you are Banned in subscription channel. Please contact admin.", quote=True)
             return False
     except UserNotParticipant:
         user_det = await is_req_user(int(user_id), int(force_sub))
