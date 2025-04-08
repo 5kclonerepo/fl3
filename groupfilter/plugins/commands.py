@@ -60,20 +60,23 @@ async def start(bot, update):
             reply_markup=START_KB,
         )
     elif len(update.command) == 2:
-        src = update.command[1].split("_")
-        if src[0] == "search":
-            if PM_SUPPORT:
-                term = update.command[1].split("search_", 1)[-1].replace("_", " ")
-                await filter_pm(bot, update, search=term)
+        try:
+            src = update.command[1].split("_")
+            if src[0] == "search":
+                if PM_SUPPORT:
+                    term = update.command[1].split("search_", 1)[-1].replace("_", " ")
+                    await filter_pm(bot, update, search=term)
+                else:
+                    await update.reply_text(
+                        text="**PM mode is deactivated**",
+                        quote=True,
+                    )
+            elif update.command[1].startswith("fs_"):
+                await get_inline_fsub(bot, update)
             else:
-                await update.reply_text(
-                    text="**PM mode is deactivated**",
-                    quote=True,
-                )
-        elif update.command[1].startswith("fs_"):
-            await get_inline_fsub(bot, update)
-        else:
-            await get_files(bot, update)
+                await get_files(bot, update)
+        except Exception as e:
+            LOGGER.warning(e)
 
 
 @Client.on_message(filters.command(["help"]))
