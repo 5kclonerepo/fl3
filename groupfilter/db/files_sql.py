@@ -1,12 +1,15 @@
 import re
 import threading
 import json
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy import create_engine, func, and_, or_
 from sqlalchemy import Column, TEXT, Numeric, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.pool import StaticPool
+
+# from sqlalchemy.pool import StaticPool
 from groupfilter import DB_URL, LOGGER, BOT_TOKEN
 from groupfilter.utils.helpers import unpack_new_file_id
 from sqlalchemy import Index
@@ -14,6 +17,7 @@ from sqlalchemy.dialects.postgresql import TSVECTOR
 from groupfilter.db.redis import NamespacedRedis
 
 BASE = declarative_base()
+executor = ThreadPoolExecutor(max_workers=10)
 
 
 def get_redis_client(token: str) -> NamespacedRedis:
@@ -73,9 +77,20 @@ Index("idx_files_search_vector", Files.search_vector, postgresql_using="gin")
 
 
 def start() -> scoped_session:
-    engine = create_engine(DB_URL, client_encoding="utf8", poolclass=StaticPool)
+    engine = create_engine(
+        DB_URL,
+        client_encoding="utf8",
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_recycle=1800,
+        echo=False,
+    )
     BASE.metadata.bind = engine
+    
+    # You can skip this after initial DB setup
     BASE.metadata.create_all(engine)
+    
     return scoped_session(sessionmaker(bind=engine, autoflush=False))
 
 
@@ -141,71 +156,57 @@ def cache_key(query, page, per_page):
 
 
 async def get_filter_results(query, page=1, per_page=10):
-    if not query.strip():
-        return {"files": [], "total_count": 0}
-
     key = cache_key(query, page, per_page)
     cached_result = redis_client.get(key)
     if cached_result:
         return json.loads(cached_result)
 
-    try:
-        with INSERTION_LOCK:
-            offset = (page - 1) * per_page
-            search = [clean_query(word) for word in query.split() if clean_query(word)]
-            # contains_stop_word = any(word.lower() in STOP_WORDS for word in search)
-            # if contains_stop_word:
-            #     conditions = [Files.file_name.ilike(f"%{term}%") for term in search]
-            # else:
-            conditions = [
-                Files.search_vector.op("@@")(func.plainto_tsquery("simple", term))
-                if len(term) <= 2  # Only use plainto_tsquery for short terms
-                else or_(
-                    Files.search_vector.op("@@")(func.plainto_tsquery("simple", term)),
-                    Files.search_vector.op("@@")(
-                        func.to_tsquery("simple", f"{term}:*")
-                    ),
-                )
-                for term in search
-            ]
-            combined_condition = and_(*conditions)
-            files_query = (
-                SESSION.query(Files)
-                .filter(combined_condition)
-                .order_by(Files.id.desc())
-            )
-            total_count_query = SESSION.query(func.count(Files.file_id)).filter(
-                combined_condition
-            )
-            total_count = total_count_query.scalar()
-            files = files_query.offset(offset).limit(per_page).all()
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        executor, fetch_filter_results_sync, query, page, per_page
+    )
+    redis_client.setex(key, 86400, json.dumps(result))
+    return result
 
-            result = {
-                "files": [
-                    {
-                        "file_name": file.file_name,
-                        "file_id": file.file_id,
-                        "file_ref": file.file_ref,
-                        "file_size": str(file.file_size),
-                        "file_type": file.file_type,
-                        "mime_type": file.mime_type,
-                        "caption": file.caption,
-                    }
-                    for file in files
-                ],
-                "total_count": total_count,
-            }
-            redis_client.setex(key, 86400, json.dumps(result))
-            return result
 
-    except Exception as e:
-        SESSION.rollback()
-        LOGGER.warning(
-            "Error occurred while retrieving filter results: %s : query: %s",
-            str(e),
-            query,
+def fetch_filter_results_sync(query, page, per_page):
+    with INSERTION_LOCK:
+        offset = (page - 1) * per_page
+        search = [word for word in query.split()]
+        conditions = [
+            Files.search_vector.op("@@")(func.plainto_tsquery("simple", term))
+            if len(term) <= 2
+            else or_(
+                Files.search_vector.op("@@")(func.plainto_tsquery("simple", term)),
+                Files.search_vector.op("@@")(func.to_tsquery("simple", f"{term}:*")),
+            )
+            for term in search
+        ]
+        combined_condition = and_(*conditions)
+
+        files_query = (
+            SESSION.query(Files).filter(combined_condition).order_by(Files.id.desc())
         )
-        return {"files": [], "total_count": 0}
+        total_count = (
+            SESSION.query(func.count(Files.file_id)).filter(combined_condition).scalar()
+        )
+        files = files_query.offset(offset).limit(per_page).all()
+
+        return {
+            "files": [
+                {
+                    "file_name": file.file_name,
+                    "file_id": file.file_id,
+                    "file_ref": file.file_ref,
+                    "file_size": str(file.file_size),
+                    "file_type": file.file_type,
+                    "mime_type": file.mime_type,
+                    "caption": file.caption,
+                }
+                for file in files
+            ],
+            "total_count": total_count,
+        }
 
 
 async def get_precise_filter_results(query, page=1, per_page=10):

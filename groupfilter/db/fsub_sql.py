@@ -3,7 +3,8 @@ from sqlalchemy import Column, TEXT, BigInteger, Numeric, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.pool import StaticPool
+
+# from sqlalchemy.pool import StaticPool
 from groupfilter import DB_URL, LOGGER
 import asyncio
 
@@ -78,9 +79,20 @@ class FsubReg(BASE):
 
 
 def start() -> scoped_session:
-    engine = create_engine(DB_URL, client_encoding="utf8", poolclass=StaticPool)
+    engine = create_engine(
+        DB_URL,
+        client_encoding="utf8",
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_recycle=1800,
+        echo=False,
+    )
     BASE.metadata.bind = engine
+
+    # You can skip this after initial DB setup
     BASE.metadata.create_all(engine)
+
     return scoped_session(sessionmaker(bind=engine, autoflush=False))
 
 
@@ -168,13 +180,18 @@ async def update_force_sub(
 
 async def get_force_sub(chat_id):
     try:
-        async with INSERTION_LOCK:
-            session = SESSION()
-            sub = session.query(ForceSub).filter(ForceSub.chat_id == chat_id).first()
-            return sub
+        return await asyncio.to_thread(_get_force_sub_sync, chat_id)
     except Exception as e:
-        LOGGER.warning("Error getting Force Sub channel: %s ", str(e))
+        LOGGER.warning("Error getting Force Sub channel: %s", str(e))
         return None
+
+
+def _get_force_sub_sync(chat_id):
+    session = SESSION()
+    try:
+        return session.query(ForceSub).filter(ForceSub.chat_id == chat_id).first()
+    finally:
+        session.close()
 
 
 async def get_pen_force_subs():
@@ -192,6 +209,7 @@ async def get_pen_force_subs():
         LOGGER.warning("Error getting Force Sub channel: %s ", str(e))
         return None
 
+
 async def get_act_force_subs_count():
     try:
         async with INSERTION_LOCK:
@@ -205,6 +223,7 @@ async def get_act_force_subs_count():
     except Exception as e:
         LOGGER.warning("Error getting Force Sub channel: %s ", str(e))
         return None
+
 
 async def get_nxt_pen_force_sub():
     try:

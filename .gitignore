@@ -170,3 +170,4 @@ groupfilter.session-journal
 jobs.sqlite
 genlink.db
 jobs.sqlite-journal
+unknown_errors.txt
