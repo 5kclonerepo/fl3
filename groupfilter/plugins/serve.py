@@ -576,10 +576,11 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     parse_mode=ParseMode.MARKDOWN,
                     quote=True,
                 )
-        if DELIVERY < len(DELIVERY_CHANNELS) - 1:
-            DELIVERY += 1
-        else:
-            DELIVERY = 0
+        if DELIVERY_CHANNELS:
+            if DELIVERY < len(DELIVERY_CHANNELS) - 1:
+                DELIVERY += 1
+            else:
+                DELIVERY = 0
     except MediaEmpty:
         LOGGER.warning("File not found: %s", str(file_id))
         return
