@@ -40,13 +40,15 @@ from groupfilter.db.filters_sql import is_filter
 from groupfilter.db.promo_sql import get_promos
 from groupfilter.plugins.fsub import is_fsub
 from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
-from groupfilter import LOGGER, ADMINS, AUTH_GRPS
+from groupfilter import LOGGER, ADMINS, AUTH_GRPS, DELIVERY_CHANNELS
 from __main__ import app
 
 
 jobstores = {"default": SQLAlchemyJobStore(url="sqlite:///jobs.sqlite")}
 scheduler = AsyncIOScheduler(jobstores=jobstores)
 scheduler.start()
+
+DELIVERY = 0
 
 
 @Client.on_message(
@@ -226,13 +228,13 @@ async def pages(bot, query):
     username = me.username
 
     if org_user_id != user_id:
-        try:            
+        try:
             await query.answer(text="Not your button")
         except QueryIdInvalid:
             return
         return
     else:
-        try:            
+        try:
             await query.answer("")
         except QueryIdInvalid:
             pass
@@ -457,9 +459,8 @@ async def get_files(bot, query):
         await mesg.reply_text("You are banned. You can't use this bot.", quote=True)
         return
 
-
     admin_settings = await get_admin_settings()
-    
+
     if not await is_fsub(bot, query, user_id, file_id, admin_settings):
         return
 
@@ -467,6 +468,8 @@ async def get_files(bot, query):
 
 
 async def send_file(admin_settings, bot, query, user_id, file_id):
+    global DELIVERY
+    usr_msg = None
     filedetails = await get_file_details(file_id)
     f_caption = ""
     for files in filedetails:
@@ -510,19 +513,73 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
 
     try:
         if isinstance(query, (ChatJoinRequest, ChatMemberUpdated)):
-            msg = await bot.send_cached_media(
-                chat_id=user_id,
-                file_id=file_id,
-                caption=f_caption,
-                parse_mode=ParseMode.MARKDOWN,
-            )
+            if DELIVERY_CHANNELS:
+                usr_msg = await bot.send_cached_media(
+                    chat_id=DELIVERY_CHANNELS[DELIVERY],
+                    file_id=file_id,
+                    caption=f_caption,
+                    parse_mode=ParseMode.MARKDOWN,
+                )
+                from_channel = usr_msg.chat.id
+                msg_id = usr_msg.id
+                channel_link_id = str(from_channel).replace("-100", "", 1)
+                link_kb = InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                "Get File", url=f"t.me/c/{channel_link_id}/{msg_id}"
+                            )
+                        ]
+                    ]
+                )
+                msg = await bot.send_message(
+                    chat_id=user_id,
+                    text="Tap below button to get file.",
+                    reply_markup=link_kb,
+                )
+            else:
+                msg = await bot.send_cached_media(
+                    chat_id=user_id,
+                    file_id=file_id,
+                    caption=f_caption,
+                    parse_mode=ParseMode.MARKDOWN,
+                )
         else:
-            msg = await mesg.reply_cached_media(
-                file_id=file_id,
-                caption=f_caption,
-                parse_mode=ParseMode.MARKDOWN,
-                quote=True,
-            )
+            if DELIVERY_CHANNELS:
+                usr_msg = await bot.send_cached_media(
+                    chat_id=DELIVERY_CHANNELS[DELIVERY],
+                    file_id=file_id,
+                    caption=f_caption,
+                    parse_mode=ParseMode.MARKDOWN,
+                )
+                from_channel = usr_msg.chat.id
+                msg_id = usr_msg.id
+                channel_link_id = str(from_channel).replace("-100", "", 1)
+                link_kb = InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                "Get File", url=f"t.me/c/{channel_link_id}/{msg_id}"
+                            )
+                        ]
+                    ]
+                )
+                msg = await mesg.reply_text(
+                    text="Tap below button to get file.",
+                    reply_markup=link_kb,
+                    quote=True,
+                )
+            else:
+                msg = await mesg.reply_cached_media(
+                    file_id=file_id,
+                    caption=f_caption,
+                    parse_mode=ParseMode.MARKDOWN,
+                    quote=True,
+                )
+        if DELIVERY < len(DELIVERY_CHANNELS) - 1:
+            DELIVERY += 1
+        else:
+            DELIVERY = 0
     except MediaEmpty:
         LOGGER.warning("File not found: %s", str(file_id))
         return
@@ -586,6 +643,14 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                 max_instances=500000,
                 misfire_grace_time=200,
             )
+            if usr_msg:
+                scheduler.add_job(
+                    del_message,
+                    trigger,
+                    args=[usr_msg.chat.id, usr_msg.id],
+                    max_instances=500000,
+                    misfire_grace_time=200,
+                )
         except AttributeError as e:
             LOGGER.warning("Error occurred while deleting file: %s", str(e))
 

@@ -31,6 +31,10 @@ AUTH_GRPS = [
     int(ch) if id_pattern.search(ch) else ch
     for ch in os.environ.get("AUTH_GRPS", "").split()
 ] or False
+DELIVERY_CHANNELS = [
+    int(ch) if id_pattern.search(ch) else ch
+    for ch in os.environ.get("DELIVERY_CHANNELS", "").split()
+] or False
 
 try:
     import const
