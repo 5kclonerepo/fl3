@@ -139,6 +139,11 @@ async def broadcast_message(bot, message, user_id):
             document=log_file,
             caption="Failed users log.",
         )
+    success = 0
+    failed = 0
+    completed = 0
+    t_users = 0
+    start_time = None
 
 
 @Client.on_callback_query(filters.regex(r"^brd_pgrs$"))
