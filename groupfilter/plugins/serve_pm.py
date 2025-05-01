@@ -36,7 +36,10 @@ from groupfilter.db.promo_sql import get_promos
 from groupfilter.plugins.fsub import is_fsub
 from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
 from groupfilter.plugins.serve import scheduler, del_message, get_size, trim_button_text
-from groupfilter import LOGGER
+from groupfilter import LOGGER, DELIVERY_CHANNELS
+
+
+DELIVERY = 0
 
 
 @Client.on_message(
@@ -410,21 +413,87 @@ async def send_pm_file(admin_settings, bot, query, user_id, file_id, cbq):
 
     try:
         if cbq:
-            msg = await query.message.reply_cached_media(
-                file_id=file_id,
-                caption=f_caption,
-                parse_mode=ParseMode.MARKDOWN,
-                quote=True,
-            )
+            if DELIVERY_CHANNELS:
+                delcn = DELIVERY_CHANNELS[DELIVERY]
+                try:
+                    usr_msg = await bot.send_cached_media(
+                        chat_id=delcn,
+                        file_id=file_id,
+                        caption=f_caption,
+                        parse_mode=ParseMode.MARKDOWN,
+                    )
+                except Exception as e:
+                    LOGGER.warning("Error occurred while sending file: %s : Channel - %s", str(e), delcn)
+                    DELIVERY += 1
+                    delcn = DELIVERY_CHANNELS[DELIVERY]
+                    usr_msg = await bot.send_cached_media(
+                        chat_id=delcn,
+                        file_id=file_id,
+                        caption=f_caption,
+                        parse_mode=ParseMode.MARKDOWN,
+                    )
+                from_channel = usr_msg.chat.id
+                msg_id = usr_msg.id
+                try:
+                    clink = int(delcn)
+                    channel_link_id = str(clink).replace("-100", "", 1)
+                    url=f"t.me/c/{channel_link_id}/{msg_id}"
+                except Exception:
+                    channel_link = delcn
+                    url=f"t.me/{channel_link}/{msg_id}"
+                link_kb = InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                "Get File", url=url
+                            )
+                        ]
+                    ]
+                )
+                msg = await bot.send_message(
+                    chat_id=user_id,
+                    text="Tap below button to get file.",
+                    reply_markup=link_kb,
+                )
+            else:
+                msg = await bot.send_cached_media(
+                    chat_id=user_id,
+                    file_id=file_id,
+                    caption=f_caption,
+                    parse_mode=ParseMode.MARKDOWN,
+                )
         else:
-            msg = await query.message.reply_cached_media(
-                file_id=file_id,
-                caption=f_caption,
-                parse_mode=ParseMode.MARKDOWN,
-                quote=True,
-            )
+            if DELIVERY_CHANNELS:
+                delcn = DELIVERY_CHANNELS[DELIVERY]
+                try:
+                    usr_msg = await bot.send_cached_media(
+                        chat_id=delcn,
+                        file_id=file_id,
+                        caption=f_caption,
+                        parse_mode=ParseMode.MARKDOWN,
+                    )
+                except Exception as e:
+                    LOGGER.warning("Error occurred while sending file: %s : Channel - %s", str(e), delcn)
+                    DELIVERY += 1
+                    delcn = DELIVERY_CHANNELS[DELIVERY]
+                    usr_msg = await bot.send_cached_media(
+                        chat_id=delcn,
+                        file_id=file_id,
+                        caption=f_caption,
+                        parse_mode=ParseMode.MARKDOWN,
+                    )
+            else:
+                msg = await query.message.reply_cached_media(
+                    file_id=file_id,
+                    caption=f_caption,
+                    parse_mode=ParseMode.MARKDOWN,
+                    quote=True,
+                )
     except MediaEmpty:
         LOGGER.warning("File not found: %s", str(file_id))
+        return
+    except AttributeError:
+        await query.answer("Try with new search again", show_alert=True)
         return
 
     if admin_settings.auto_delete:
@@ -470,5 +539,13 @@ async def send_pm_file(admin_settings, bot, query, user_id, file_id, cbq):
                 max_instances=500000,
                 misfire_grace_time=200,
             )
+            if usr_msg:
+                scheduler.add_job(
+                    del_message,
+                    trigger,
+                    args=[usr_msg.chat.id, usr_msg.id],
+                    max_instances=500000,
+                    misfire_grace_time=200,
+                )
         except AttributeError as e:
             LOGGER.warning("Error occurred while deleting file: %s", str(e))
