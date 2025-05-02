@@ -534,7 +534,10 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     )
                 except Exception as e:
                     LOGGER.warning("Error occurred while sending file: %s : Channel - %s", str(e), delcn)
-                    DELIVERY += 1
+                    if DELIVERY < len(DELIVERY_CHANNELS) - 1:
+                        DELIVERY += 1
+                    else:
+                        DELIVERY = 0
                     delcn = DELIVERY_CHANNELS[DELIVERY]
                     usr_msg = await bot.send_cached_media(
                         chat_id=delcn,
@@ -584,7 +587,10 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     )
                 except Exception as e:
                     LOGGER.warning("Error occurred while sending file: %s : Channel - %s", str(e), delcn)
-                    DELIVERY += 1
+                    if DELIVERY < len(DELIVERY_CHANNELS) - 1:
+                        DELIVERY += 1
+                    else:
+                        DELIVERY = 0
                     delcn = DELIVERY_CHANNELS[DELIVERY]
                     usr_msg = await bot.send_cached_media(
                         chat_id=delcn,
