@@ -50,5 +50,5 @@ HELP_KB = const.HELP_KB
 # logging Conf
 logging.config.fileConfig(fname="config.ini", disable_existing_loggers=False)
 LOGGER = logging.getLogger(__name__)
-logging.getLogger("pyrogram").setLevel(logging.WARNING)
+logging.getLogger("pyrogram").setLevel(logging.ERROR)
 logging.getLogger("apscheduler").setLevel(logging.WARNING)
