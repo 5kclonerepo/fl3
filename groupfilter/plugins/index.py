@@ -175,6 +175,7 @@ async def index_files_task(bot, msg, chat_id, start_msg_id, last_msg_id):
     errors = 0
     deleted = 0
     no_media = 0
+    processed = 0
     total = last_msg_id + 1
 
     semaphore = asyncio.Semaphore(CONCURRENT_BATCH_SIZE)
@@ -245,6 +246,7 @@ async def index_files_task(bot, msg, chat_id, start_msg_id, last_msg_id):
 
     async def process_batch(message_ids):
         nonlocal deleted
+        nonlocal processed
         async with semaphore:
             messages = await bot.get_messages(chat_id=chat_id, message_ids=message_ids)
             tasks = []
@@ -255,7 +257,8 @@ async def index_files_task(bot, msg, chat_id, start_msg_id, last_msg_id):
                     deleted += 1
             if tasks:
                 await asyncio.gather(*tasks, return_exceptions=True)
-            LOGGER.info(f"Processed {len(messages)} messages")
+            processed += int(len(messages))
+            LOGGER.info("Processed %s messages", processed)
 
     async with lock:
         try:
