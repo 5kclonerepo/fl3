@@ -451,6 +451,7 @@ async def get_existing_files_cache():
             existing_files_data = {}
             batch_size = 25000
             offset = 0
+            total_loaded = 0
 
             while True:
                 files = SESSION.query(Files).offset(offset).limit(batch_size).all()
@@ -469,12 +470,13 @@ async def get_existing_files_cache():
                         "mime_type": file.mime_type,
                         "caption": file.caption,
                     }
-
-                LOGGER.info(f"Loaded {len(files)} files from the database")
+                loaded_count = len(files)
+                LOGGER.info(f"Loaded {loaded_count} files from the database")
+                total_loaded += loaded_count
                 offset += batch_size
-                if len(files) < batch_size:
+                if loaded_count < batch_size:
                     break
-            LOGGER.info(f"Total files loaded: {len(offset)}")
+            LOGGER.info(f"Total files loaded: {total_loaded}")
             return existing_files_data
     except Exception as e:
         LOGGER.error(f"Error getting existing files: {e}")
