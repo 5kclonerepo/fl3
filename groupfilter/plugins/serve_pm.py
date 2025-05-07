@@ -508,6 +508,7 @@ async def send_pm_file(admin_settings, bot, query, user_id, file_id, cbq):
 
     if admin_settings["auto_delete"]:
         try:
+            usr_msg = None
             delay_dur = admin_settings["auto_delete"]
             delay = delay_dur / 60 if delay_dur > 60 else delay_dur
             delay = round(delay, 2)
