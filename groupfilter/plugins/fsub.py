@@ -589,7 +589,7 @@ async def check_fsub(
 async def is_inline_fsub(bot, query, user_id, admin_settings):
     f_sub = await get_active_force_subs()
     actfsubcount = await get_act_force_subs_count()
-    fsublimit = admin_settings["fsub_channel"]
+    fsublimit = admin_settings["fsub_channel"] or 2
 
     if f_sub:
         if actfsubcount < fsublimit:
