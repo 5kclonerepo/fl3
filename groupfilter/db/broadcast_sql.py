@@ -123,7 +123,7 @@ async def count_users():
 async def clear_users():
     try:
         with INSERTION_LOCK:
-            SESSION.query(Broadcast).delete()
-            SESSION.commit()
+            with session_scope() as session:
+                session.query(Broadcast).delete()
     except Exception as e:
         LOGGER.warning("Error occurred while clearing users: %s", str(e))

@@ -191,7 +191,7 @@ async def get_filter_results(query, page=1, per_page=10):
 
 
 def fetch_filter_results_sync(query, page, per_page):
-    with INSERTION_LOCK:
+    try:
         offset = (page - 1) * per_page
         search = [word for word in query.split()]
         conditions = [
@@ -205,29 +205,33 @@ def fetch_filter_results_sync(query, page, per_page):
         ]
         combined_condition = and_(*conditions)
 
-        files_query = (
-            SESSION.query(Files).filter(combined_condition).order_by(Files.id.desc())
-        )
-        total_count = (
-            SESSION.query(func.count(Files.file_id)).filter(combined_condition).scalar()
-        )
-        files = files_query.offset(offset).limit(per_page).all()
+        with session_scope() as session:
+            files_query = (
+                session.query(Files).filter(combined_condition).order_by(Files.id.desc())
+            )
+            total_count = (
+                session.query(func.count(Files.file_id)).filter(combined_condition).scalar()
+            )
+            files = files_query.offset(offset).limit(per_page).all()
 
-        return {
-            "files": [
-                {
-                    "file_name": file.file_name,
-                    "file_id": file.file_id,
-                    "file_ref": file.file_ref,
-                    "file_size": str(int(file.file_size)),
-                    "file_type": file.file_type,
-                    "mime_type": file.mime_type,
-                    "caption": file.caption,
-                }
-                for file in files
-            ],
-            "total_count": total_count,
-        }
+            return {
+                "files": [
+                    {
+                        "file_name": file.file_name,
+                        "file_id": file.file_id,
+                        "file_ref": file.file_ref,
+                        "file_size": str(int(file.file_size)),
+                        "file_type": file.file_type,
+                        "mime_type": file.mime_type,
+                        "caption": file.caption,
+                    }
+                    for file in files
+                ],
+                "total_count": total_count,
+            }
+    except Exception as e:
+        LOGGER.warning("Error occurred while retrieving filter results: %s", str(e))
+        return {"files": [], "total_count": 0}
 
 
 async def get_precise_filter_results(query, page=1, per_page=10):
@@ -236,19 +240,19 @@ async def get_precise_filter_results(query, page=1, per_page=10):
     if cached_result:
         return json.loads(cached_result)
     try:
-        with INSERTION_LOCK:
-            offset = (page - 1) * per_page
-            search = query.split()
+        offset = (page - 1) * per_page
+        search = query.split()
 
-            conditions = [Files.search_vector.match(f'"{word}"') for word in search]
-            combined_condition = and_(*conditions)
+        conditions = [Files.search_vector.match(f'"{word}"') for word in search]
+        combined_condition = and_(*conditions)
 
+        with session_scope() as session:
             files_query = (
-                SESSION.query(Files)
+                session.query(Files)
                 .filter(combined_condition)
                 .order_by(Files.id.desc())
             )
-            total_count_query = SESSION.query(func.count(Files.file_id)).filter(
+            total_count_query = session.query(func.count(Files.file_id)).filter(
                 combined_condition
             )
             total_count = total_count_query.scalar()
@@ -282,10 +286,10 @@ async def get_last_results(page=1, per_page=10):
     if cached_result:
         return json.loads(cached_result)
     try:
-        with INSERTION_LOCK:
-            offset = (page - 1) * per_page
-            files_query = SESSION.query(Files).order_by(Files.id.desc())
-            total_count_query = SESSION.query(func.count(Files.file_id))
+        offset = (page - 1) * per_page
+        with session_scope() as session:
+            files_query = session.query(Files).order_by(Files.id.desc())
+            total_count_query = session.query(func.count(Files.file_id))
             total_count = total_count_query.scalar()
             files = files_query.offset(offset).limit(per_page).all()
 
@@ -308,7 +312,6 @@ async def get_last_results(page=1, per_page=10):
             return result
 
     except Exception as e:
-        SESSION.rollback()
         LOGGER.warning("Error occurred while retrieving last file results: %s", str(e))
         return {"files": [], "total_count": 0}
 
@@ -323,37 +326,38 @@ async def get_inline_filter_results(query, page=1, per_page=10):
         return json.loads(cached_result)
 
     try:
-        with INSERTION_LOCK:
-            offset = (page - 1) * per_page
-            search = [clean_query(word) for word in query.split() if clean_query(word)]
-            # contains_stop_word = any(word.lower() in STOP_WORDS for word in search)
-            # if contains_stop_word:
-            #     conditions = [Files.file_name.ilike(f"%{term}%") for term in search]
-            # else:
-            #     conditions = [
-            #         Files.search_vector.op("@@")(
-            #             func.to_tsquery(f"{term}" if len(term) <= 1 else f"{term}:*")
-            #         )
-            #         for term in search
-            #     ]
-            conditions = [
-                Files.search_vector.op("@@")(func.plainto_tsquery("simple", term))
-                if len(term) <= 2  # Only use plainto_tsquery for short terms
-                else or_(
-                    Files.search_vector.op("@@")(func.plainto_tsquery("simple", term)),
-                    Files.search_vector.op("@@")(
-                        func.to_tsquery("simple", f"{term}:*")
-                    ),
-                )
-                for term in search
-            ]
-            combined_condition = and_(*conditions)
+        offset = (page - 1) * per_page
+        search = [clean_query(word) for word in query.split() if clean_query(word)]
+        # contains_stop_word = any(word.lower() in STOP_WORDS for word in search)
+        # if contains_stop_word:
+        #     conditions = [Files.file_name.ilike(f"%{term}%") for term in search]
+        # else:
+        #     conditions = [
+        #         Files.search_vector.op("@@")(
+        #             func.to_tsquery(f"{term}" if len(term) <= 1 else f"{term}:*")
+        #         )
+        #         for term in search
+        #     ]
+        conditions = [
+            Files.search_vector.op("@@")(func.plainto_tsquery("simple", term))
+            if len(term) <= 2  # Only use plainto_tsquery for short terms
+            else or_(
+                Files.search_vector.op("@@")(func.plainto_tsquery("simple", term)),
+                Files.search_vector.op("@@")(
+                    func.to_tsquery("simple", f"{term}:*")
+                ),
+            )
+            for term in search
+        ]
+        combined_condition = and_(*conditions)
+        
+        with session_scope() as session:
             files_query = (
-                SESSION.query(Files)
+                session.query(Files)
                 .filter(combined_condition)
                 .order_by(Files.id.desc())
             )
-            total_count_query = SESSION.query(func.count(Files.file_id)).filter(
+            total_count_query = session.query(func.count(Files.file_id)).filter(
                 combined_condition
             )
 
@@ -379,7 +383,6 @@ async def get_inline_filter_results(query, page=1, per_page=10):
             return result
 
     except Exception as e:
-        SESSION.rollback()
         LOGGER.warning(
             "Error occurred while retrieving filter results: %s : query: %s",
             str(e),
@@ -390,8 +393,8 @@ async def get_inline_filter_results(query, page=1, per_page=10):
 
 async def get_file_details(file_id):
     try:
-        with INSERTION_LOCK:
-            file_details = SESSION.query(Files).filter_by(file_id=file_id).all()
+        with session_scope() as session:
+            file_details = session.query(Files).filter_by(file_id=file_id).all()
             return [
                 {
                     "file_name": file_details.file_name,
@@ -412,24 +415,24 @@ async def delete_file(media):
     file_id, file_ref = unpack_new_file_id(media.file_id)
     try:
         with INSERTION_LOCK:
-            file = SESSION.query(Files).filter_by(file_id=file_id).first()
-            if file:
-                SESSION.delete(file)
-                SESSION.commit()
-                return True
-            return "Not Found"
-            LOGGER.warning("File to delete not found: %s", str(file_id))
+            with session_scope() as session:
+                file = session.query(Files).filter_by(file_id=file_id).first()
+                if file:
+                    session.delete(file)
+                    return True
+                LOGGER.warning("File to delete not found: %s", str(file_id))
+                return "Not Found"
     except Exception as e:
         LOGGER.warning("Error occurred while deleting file: %s", str(e))
-        SESSION.rollback()
         return False
 
 
 async def count_files():
     try:
         with INSERTION_LOCK:
-            total_count = SESSION.query(Files).count()
-            return total_count
+            with session_scope() as session:
+                total_count = session.query(Files).count()
+                return total_count
     except Exception as e:
         LOGGER.warning("Error occurred while counting files: %s", str(e))
         return 0
@@ -454,28 +457,29 @@ async def get_existing_files_cache():
             total_loaded = 0
 
             while True:
-                files = SESSION.query(Files).offset(offset).limit(batch_size).all()
-                if not files:
-                    break
+                with session_scope() as session:
+                    files = session.query(Files).offset(offset).limit(batch_size).all()
+                    if not files:
+                        break
 
-                for file in files:
-                    file_key = file.file_id
-                    LOGGER.debug(f"Loading file with key: {file_key}")
-                    existing_files_data[file_key] = {
-                        "file_name": file.file_name,
-                        "file_id": file.file_id,
-                        "file_ref": file.file_ref,
-                        "file_size": str(int(file.file_size)),
-                        "file_type": file.file_type,
-                        "mime_type": file.mime_type,
-                        "caption": file.caption,
-                    }
-                loaded_count = len(files)
-                LOGGER.info(f"Loaded {loaded_count} files from the database")
-                total_loaded += loaded_count
-                offset += batch_size
-                if loaded_count < batch_size:
-                    break
+                    for file in files:
+                        file_key = file.file_id
+                        LOGGER.debug(f"Loading file with key: {file_key}")
+                        existing_files_data[file_key] = {
+                            "file_name": file.file_name,
+                            "file_id": file.file_id,
+                            "file_ref": file.file_ref,
+                            "file_size": str(int(file.file_size)),
+                            "file_type": file.file_type,
+                            "mime_type": file.mime_type,
+                            "caption": file.caption,
+                        }
+                    loaded_count = len(files)
+                    LOGGER.info(f"Loaded {loaded_count} files from the database")
+                    total_loaded += loaded_count
+                    offset += batch_size
+                    if loaded_count < batch_size:
+                        break
             LOGGER.info(f"Total files loaded: {total_loaded}")
             return existing_files_data
     except Exception as e:
@@ -505,25 +509,24 @@ async def save_new_files(new_files_data, DB_SEMAPHORE):
 
                 async with DB_SEMAPHORE:
                     with INSERTION_LOCK:
-                        file = Files(
-                            file_name=file_data["file_name"],
-                            file_id=file_data["file_id"],
-                            file_ref=file_data["file_ref"],
-                            file_size=str(int(file_data["file_size"])),
-                            file_type=file_data["file_type"],
-                            mime_type=file_data["mime_type"],
-                            caption=file_data["caption"],
-                            search_vector=search_vector,
-                        )
-                        SESSION.add(file)
-                        SESSION.commit()
-                        saved += 1
-                        LOGGER.info(f"Indexed file to DB: {file_data['file_name']}")
+                        with session_scope() as session:
+                            file = Files(
+                                file_name=file_data["file_name"],
+                                file_id=file_data["file_id"],
+                                file_ref=file_data["file_ref"],
+                                file_size=str(int(file_data["file_size"])),
+                                file_type=file_data["file_type"],
+                                mime_type=file_data["mime_type"],
+                                caption=file_data["caption"],
+                                search_vector=search_vector,
+                            )
+                            session.add(file)
+                            saved += 1
+                            LOGGER.info(f"Indexed file to DB: {file_data['file_name']}")
             except Exception as e:
                 errors += 1
                 LOGGER.error(f"Error saving file to DB: {e}")
                 LOGGER.error(f"File data that caused error: {file_data}")
-                SESSION.rollback()
     except Exception as e:
         LOGGER.error(f"Error in batch save: {e}")
         errors += len(new_files_data)
@@ -606,20 +609,20 @@ async def search_files_by_name(search_term):
     
     for attempt in range(max_retries):
         try:
-            with INSERTION_LOCK:
-                search = [word for word in search_term.split()]
-                conditions = [
-                    Files.search_vector.op("@@")(func.plainto_tsquery("simple", term))
-                    if len(term) <= 2
-                    else or_(
-                        Files.search_vector.op("@@")(func.plainto_tsquery("simple", term)),
-                        Files.search_vector.op("@@")(func.to_tsquery("simple", f"{term}:*")),
-                    )
-                    for term in search
-                ]
-                combined_condition = and_(*conditions)
+            search = [word for word in search_term.split()]
+            conditions = [
+                Files.search_vector.op("@@")(func.plainto_tsquery("simple", term))
+                if len(term) <= 2
+                else or_(
+                    Files.search_vector.op("@@")(func.plainto_tsquery("simple", term)),
+                    Files.search_vector.op("@@")(func.to_tsquery("simple", f"{term}:*")),
+                )
+                for term in search
+            ]
+            combined_condition = and_(*conditions)
 
-                files = SESSION.query(Files).filter(combined_condition).order_by(Files.id.desc()).all()
+            with session_scope() as session:
+                files = session.query(Files).filter(combined_condition).order_by(Files.id.desc()).all()
                 return [
                     {
                         "file_name": file.file_name,
@@ -636,14 +639,8 @@ async def search_files_by_name(search_term):
             LOGGER.warning(f"Error occurred while searching files by name (attempt {attempt + 1}/{max_retries}): {str(e)}")
             if attempt < max_retries - 1:
                 await asyncio.sleep(retry_delay)
-                # Try to refresh the session
-                try:
-                    SESSION.close()
-                    SESSION.remove()
-                except:
-                    pass
             else:
-                raise
+                LOGGER.error(f"All attempts failed when searching for '{search_term}': {str(e)}")
     return []
 
 
@@ -653,20 +650,20 @@ async def delete_files_by_name(search_term):
     
     for attempt in range(max_retries):
         try:
-            with INSERTION_LOCK:
-                search = [word for word in search_term.split()]
-                conditions = [
-                    Files.search_vector.op("@@")(func.plainto_tsquery("simple", term))
-                    if len(term) <= 2
-                    else or_(
-                        Files.search_vector.op("@@")(func.plainto_tsquery("simple", term)),
-                        Files.search_vector.op("@@")(func.to_tsquery("simple", f"{term}:*")),
-                    )
-                    for term in search
-                ]
-                combined_condition = and_(*conditions)
+            search = [word for word in search_term.split()]
+            conditions = [
+                Files.search_vector.op("@@")(func.plainto_tsquery("simple", term))
+                if len(term) <= 2
+                else or_(
+                    Files.search_vector.op("@@")(func.plainto_tsquery("simple", term)),
+                    Files.search_vector.op("@@")(func.to_tsquery("simple", f"{term}:*")),
+                )
+                for term in search
+            ]
+            combined_condition = and_(*conditions)
 
-                files = SESSION.query(Files).filter(combined_condition).all()
+            with session_scope() as session:
+                files = session.query(Files).filter(combined_condition).all()
                 if not files:
                     return 0, 0
                 
@@ -675,35 +672,27 @@ async def delete_files_by_name(search_term):
                 
                 for file in files:
                     try:
-                        SESSION.delete(file)
+                        session.delete(file)
                         deleted_count += 1
                     except Exception as e:
                         LOGGER.warning(f"Error deleting file {file.file_name}: {str(e)}")
                         failed_count += 1
                         
-                SESSION.commit()
                 return deleted_count, failed_count
                 
         except Exception as e:
             LOGGER.warning(f"Error occurred while deleting files by name (attempt {attempt + 1}/{max_retries}): {str(e)}")
-            SESSION.rollback()
             if attempt < max_retries - 1:
                 await asyncio.sleep(retry_delay)
-                # Try to refresh the session
-                try:
-                    SESSION.close()
-                    SESSION.remove()
-                except:
-                    pass
             else:
-                raise
+                LOGGER.error(f"All attempts failed when deleting files for '{search_term}': {str(e)}")
     return 0, 0
 
 
 async def clear_files():
     try:
         with INSERTION_LOCK:
-            SESSION.query(Files).delete()
-            SESSION.commit()
+            with session_scope() as session:
+                session.query(Files).delete()
     except Exception as e:
         LOGGER.warning("Error occurred while clearing files: %s", str(e))
