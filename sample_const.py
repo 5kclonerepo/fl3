@@ -62,6 +62,18 @@ HELP_BK_KB = InlineKeyboardMarkup(
 )
 
 
+def nf_kb(term):
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                "🔍 𝗦𝗲𝗮𝗿𝗰𝗵 𝗧𝗵𝗲 𝗙𝗶𝗹𝗲 𝗡𝗮𝗺𝗲 𝗙𝗿𝗼𝗺 𝗚𝗼𝗼𝗴𝗹𝗲 🔎", url=f"https://www.google.com/search?q={term}"
+            ),
+        ]
+    ]
+)
+
+
 START_MSG = "Hi **[{}](tg://user?id={})**, I am a an autofilter bot which finds & shares media from my database."
 
 
@@ -189,6 +201,14 @@ UTIL_HLP_MSG = """
 ‣ /clearusers - __Clear all users from DB__
 ‣ /clearfsubusers - __Clear all force subscribe users from db__
 """
+
+
+def nf_txt(mention, term):
+    return f"𝗛ᴇʏ {mention},\nCᴏᴜʟᴅɴ'ᴛ Fɪɴᴅ Tʜᴇ Fɪʟᴇ Yᴏᴜ Rᴇqᴜᴇꜱᴛᴇᴅ.\nMᴀᴋᴇ Sᴜʀᴇ Tʜᴇ Cᴏʀʀᴇᴄᴛ Sᴩᴇʟʟɪɴɢ.\nTʀʏ Sᴇᴀʀᴄʜɪɴɢ {term} ᴏɴ Gᴏᴏɢʟᴇ![ ](https://i.ibb.co/HDPJ5Np1/f87be38fcd9b.jpg)"
+
+
+def res_txt(mention, search, botmention, count, crnt_pg, tot_pg):
+    return f"🎪 ᴛɪᴛɪʟᴇ {search}\n\n┏ 🤴 ᴀsᴋᴇᴅʙʏ : {mention}\n┣⚡️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ : {botmention} 🐻 (https://t.me/chopper_findbot)\n┗🍁 ᴄʜᴀɴɴᴇʟ : [Cinemathattakam](https://t.me/CT_Arena)\n\nᴀꜰᴛᴇʀ 10 ᴍɪɴᴜᴛᴇꜱ ᴛʜɪꜱ ᴍᴇꜱꜱᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴅᴇʟᴇᴛᴇᴅ\n\n★ ᴘᴏᴡᴇʀᴇᴅ ʙʏ : [Cinemathattakam](https://t.me/CT_Arena)\n\nSᴇᴀʀᴄʜᴇᴅ Fɪʟᴇ : {search} | Tᴏᴛᴀʟ Rᴇsᴜʟᴛs : {count}\nᴘᴀɢᴇ {crnt_pg}/{tot_pg}"
 
 
 REMOVE_WORDS = [

@@ -40,6 +40,7 @@ from groupfilter.db.filters_sql import is_filter
 from groupfilter.db.promo_sql import get_promos
 from groupfilter.plugins.fsub import is_fsub
 from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
+from sample_const import nf_txt, nf_kb, res_txt
 from groupfilter import LOGGER, ADMINS, AUTH_GRPS, DELIVERY_CHANNELS
 from __main__ import app
 
@@ -84,7 +85,8 @@ async def filter_(bot, message, search=None):
 
     user_id = message.from_user.id
     chat_id = message.chat.id
-
+    mention = message.from_user.mention
+    
     if not search:
         if re.findall(r"((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", message.text):
             return
@@ -150,7 +152,8 @@ async def filter_(bot, message, search=None):
     page_no = 1
     me = bot.me
     username = me.username
-    result, btn = await get_result(search, page_no, user_id, username, chat_id)
+    botmention = me.mention
+    result, btn = await get_result(search, page_no, user_id, username, chat_id, mention, botmention)
 
     btn_msg = None
     nf_msg = None
@@ -179,8 +182,8 @@ async def filter_(bot, message, search=None):
             elif admin_settings["notfound_msg"] and not admin_settings["notfound_img"]:
                 nf_msg = await message.reply_text(admin_settings["notfound_msg"])
             else:
-                msg = "No results found.\nOr retry with the correct spelling 🤐"
-                nf_msg = await message.reply_text(msg)
+                nf_msg = nf_txt(mention, search)
+                await message.reply_text(nf_msg, reply_markup=nf_kb(search))
         if src:
             await src.delete()
     except ButtonDataInvalid as e:
@@ -222,11 +225,13 @@ async def pages(bot, query):
                     return
     user_id = query.from_user.id
     chat_id = query.message.chat.id
+    mention = query.from_user.mention
     org_user_id, page_no, search = query.data.split(maxsplit=3)[1:]
     org_user_id = int(org_user_id)
     page_no = int(page_no)
     me = bot.me
     username = me.username
+    botmention = me.mention
 
     if org_user_id != user_id:
         try:
@@ -240,7 +245,7 @@ async def pages(bot, query):
         except QueryIdInvalid:
             pass
 
-    result, btn = await get_result(search, page_no, user_id, username, chat_id)
+    result, btn = await get_result(search, page_no, user_id, username, chat_id, mention, botmention)
 
     if result:
         try:
@@ -277,11 +282,11 @@ async def pages(bot, query):
         elif admin_settings["notfound_msg"] and not admin_settings["notfound_img"]:
             nf_msg = await query.message.reply_text(admin_settings["notfound_msg"])
         else:
-            nf_msg = "No results found.\nOr retry with the correct spelling 🤐"
-            await query.message.reply_text(nf_msg)
+            nf_msg = nf_txt(mention, search)
+            await query.message.reply_text(nf_msg, reply_markup=nf_kb(search))
 
 
-async def get_result(search, page_no, user_id, username, chat_id):
+async def get_result(search, page_no, user_id, username, chat_id, mention, botmention):
     search_settings = await get_search_settings(chat_id)
 
     if search_settings and search_settings["precise_mode"]:
@@ -319,7 +324,7 @@ async def get_result(search, page_no, user_id, username, chat_id):
         crnt_pg = index // 10 + 1
         tot_pg = (count + 10 - 1) // 10
         btn_count = 0
-        result = f"**Search Query:** `{search}`\n**Total Results:** `{count}`\n**Page:** `{crnt_pg}/{tot_pg}`\n"
+        result = res_txt(mention, search, botmention, count, crnt_pg, tot_pg)
         page = page_no
 
         for file in files["files"]:
