@@ -333,9 +333,9 @@ async def get_pm_result(search, page_no, user_id, username, chat_id, mention, bo
             btn.append(kb)
 
         if link_mode == "ON":
-            result += "\n__Tap on the file name and then start to download.__"
+            result += "\n>__Tap on the file name and then start to download.__"
         else:
-            result += "\n🔻__Tap on the file button and then start to download.__🔻"
+            result += "\n>🔻__Tap on the file button and then start to download.__🔻"
 
         return result, btn
 
