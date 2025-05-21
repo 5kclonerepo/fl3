@@ -531,7 +531,8 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
     try:
         if isinstance(query, (ChatJoinRequest, ChatMemberUpdated)):
             if DELIVERY_CHANNELS:
-                delcn = DELIVERY_CHANNELS[DELIVERY]
+                delcn = DELIVERY_CHANNELS[DELIVERY]["chat_id"]
+                jlink = DELIVERY_CHANNELS[DELIVERY]["link"]
                 try:
                     usr_msg = await bot.send_cached_media(
                         chat_id=delcn,
@@ -541,11 +542,9 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     )
                 except Exception as e:
                     LOGGER.warning("Error occurred while sending file: %s : Channel - %s", str(e), delcn)
-                    if DELIVERY < len(DELIVERY_CHANNELS) - 1:
-                        DELIVERY += 1
-                    else:
-                        DELIVERY = 0
-                    delcn = DELIVERY_CHANNELS[DELIVERY]
+                    DELIVERY = (DELIVERY + 1) % len(DELIVERY_CHANNELS)
+                    delcn = DELIVERY_CHANNELS[DELIVERY]["chat_id"]
+                    jlink = DELIVERY_CHANNELS[DELIVERY]["link"]
                     usr_msg = await bot.send_cached_media(
                         chat_id=delcn,
                         file_id=file_id,
@@ -565,14 +564,19 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     [
                         [
                             InlineKeyboardButton(
-                                "Get File", url=url
+                                "📥 Rᴇᴏ̨ᴜᴇsᴛ Rᴇᴅɪʀᴇᴄᴛ Cʜᴀɴɴᴇʟ 📥", url=jlink
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                "⚠️ Nᴏᴡ Cʟɪᴄᴋ Hᴇʀᴇ Fᴏʀ Fɪʟᴇ 🥰 ⚠️", url=url
                             )
                         ]
                     ]
                 )
                 msg = await bot.send_message(
                     chat_id=user_id,
-                    text="Tap below button to get file.",
+                    text=">**File has been sent to redirect channel.**\n\nTap on request redirect button & then tap on the file button to get the file.",
                     reply_markup=link_kb,
                 )
             else:
@@ -584,7 +588,8 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                 )
         else:
             if DELIVERY_CHANNELS:
-                delcn = DELIVERY_CHANNELS[DELIVERY]
+                delcn = DELIVERY_CHANNELS[DELIVERY]["chat_id"]
+                jlink = DELIVERY_CHANNELS[DELIVERY]["link"]
                 try:
                     usr_msg = await bot.send_cached_media(
                         chat_id=delcn,
@@ -594,11 +599,9 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     )
                 except Exception as e:
                     LOGGER.warning("Error occurred while sending file: %s : Channel - %s", str(e), delcn)
-                    if DELIVERY < len(DELIVERY_CHANNELS) - 1:
-                        DELIVERY += 1
-                    else:
-                        DELIVERY = 0
-                    delcn = DELIVERY_CHANNELS[DELIVERY]
+                    DELIVERY = (DELIVERY + 1) % len(DELIVERY_CHANNELS)
+                    delcn = DELIVERY_CHANNELS[DELIVERY]["chat_id"]
+                    jlink = DELIVERY_CHANNELS[DELIVERY]["link"]
                     usr_msg = await bot.send_cached_media(
                         chat_id=delcn,
                         file_id=file_id,
@@ -618,15 +621,20 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     [
                         [
                             InlineKeyboardButton(
-                                "Get File", url=url
+                                "📥 Rᴇᴏ̨ᴜᴇsᴛ Rᴇᴅɪʀᴇᴄᴛ Cʜᴀɴɴᴇʟ 📥", url=jlink
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                "⚠️ Nᴏᴡ Cʟɪᴄᴋ Hᴇʀᴇ Fᴏʀ Fɪʟᴇ 🥰 ⚠️", url=url
                             )
                         ]
                     ]
                 )
-                msg = await mesg.reply_text(
-                    text="Tap below button to get file.",
+                msg = await bot.send_message(
+                    chat_id=user_id,
+                    text=">**File has been sent to redirect channel.**\n\nTap on request redirect button & then tap on the file button to get the file.",
                     reply_markup=link_kb,
-                    quote=True,
                 )
             else:
                 msg = await mesg.reply_cached_media(
@@ -636,10 +644,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                     quote=True,
                 )
         if DELIVERY_CHANNELS:
-            if DELIVERY < len(DELIVERY_CHANNELS) - 1:
-                DELIVERY += 1
-            else:
-                DELIVERY = 0
+            DELIVERY = (DELIVERY + 1) % len(DELIVERY_CHANNELS)
     except MediaEmpty:
         LOGGER.warning("File not found: %s", str(file_id))
         return

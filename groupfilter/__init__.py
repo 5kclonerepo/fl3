@@ -31,10 +31,11 @@ AUTH_GRPS = [
     int(ch) if id_pattern.search(ch) else ch
     for ch in os.environ.get("AUTH_GRPS", "").split()
 ] or False
+delivery_channels = os.getenv("DELIVERY_CHANNELS", "")
 DELIVERY_CHANNELS = [
-    int(ch) if id_pattern.search(ch) else ch
-    for ch in os.environ.get("DELIVERY_CHANNELS", "").split()
-] or False
+    {"chat_id": int(item.split("|")[0]), "link": item.split("|")[1]}
+    for item in delivery_channels.split(",") if "|" in item
+]
 
 try:
     import const
