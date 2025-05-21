@@ -182,9 +182,9 @@ async def filter_(bot, message, search=None):
             elif admin_settings["notfound_msg"] and not admin_settings["notfound_img"]:
                 nf_msg = await message.reply_text(admin_settings["notfound_msg"])
             else:
-                nf_msg = nf_txt(mention, search)
+                nf_msgg = nf_txt(mention, search)
                 nf_kbb = nf_kb(search)
-                await message.reply_text(nf_msg, reply_markup=nf_kbb)
+                await message.reply_text(text=nf_msgg, reply_markup=nf_kbb)
         if src:
             await src.delete()
     except ButtonDataInvalid as e:
@@ -283,9 +283,9 @@ async def pages(bot, query):
         elif admin_settings["notfound_msg"] and not admin_settings["notfound_img"]:
             nf_msg = await query.message.reply_text(admin_settings["notfound_msg"])
         else:
-            nf_msg = nf_txt(mention, search)
+            nf_msgg = nf_txt(mention, search)
             nf_kbb = nf_kb(search)
-            await query.message.reply_text(nf_msg, reply_markup=nf_kbb)
+            await query.message.reply_text(text=nf_msgg, reply_markup=nf_kbb)
 
 
 async def get_result(search, page_no, user_id, username, chat_id, mention, botmention):
