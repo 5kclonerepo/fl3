@@ -211,12 +211,6 @@ SET_HLP_MSG = """
 >**Bot Settings Management**
 __Customize behavior, including result formats (Button, List, or Hyperlink), enabling repair mode, and viewing admin settings.__
 
-‣ /settings - __Toggle settings of Button Mode__
-`Result Mode:` 
-- __If Button, bot will return results in button format__
-- __If List, bot will return results in list format__
-- __If HyperLink, bot will return results in hyperlink format__
-
 ‣ /repairmode - __Enable or disable repair mode - If on, bot will not send any files__
 ‣ /adminsettings - __Get current admin settings__
 """
