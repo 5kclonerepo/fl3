@@ -3,7 +3,8 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-START_IMG = "https://i.ibb.co/0r00000/1.png"
+START_IMG = "start_img.png"
+NOT_F_IMG = "nf_img.png"
 
 def get_start_kb(bot_username):
     return InlineKeyboardMarkup(
