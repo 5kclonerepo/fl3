@@ -242,7 +242,7 @@ def nf_txt(mention, term):
 
 
 def res_txt(mention, search, botmention, count, crnt_pg, tot_pg):
-    return f"🎪 ᴛɪᴛɪʟᴇ {search}\n\n┏ 🤴 ᴀsᴋᴇᴅʙʏ : {mention}\n┣⚡️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ : {botmention} 🐻 (https://t.me/chopper_findbot)\n┗🍁 ᴄʜᴀɴɴᴇʟ : [Cinemathattakam](https://t.me/CT_Arena)\n\nᴀꜰᴛᴇʀ 10 ᴍɪɴᴜᴛᴇꜱ ᴛʜɪꜱ ᴍᴇꜱꜱᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴅᴇʟᴇᴛᴇᴅ\n\n★ ᴘᴏᴡᴇʀᴇᴅ ʙʏ : [Cinemathattakam](https://t.me/CT_Arena)\n\nSᴇᴀʀᴄʜᴇᴅ Fɪʟᴇ : {search} | Tᴏᴛᴀʟ Rᴇsᴜʟᴛs : {count}\nᴘᴀɢᴇ {crnt_pg}/{tot_pg}"
+    return f"🎪 ᴛɪᴛɪʟᴇ {search}\n\n┏ 🤴 ᴀsᴋᴇᴅʙʏ : {mention}\n┣⚡️ ᴘᴏᴡᴇʀᴇᴅ ʙʏ : {botmention} 🐻\n┗🍁 ᴄʜᴀɴɴᴇʟ : [Cinemathattakam](https://t.me/CT_Arena)\n\nᴀꜰᴛᴇʀ 10 ᴍɪɴᴜᴛᴇꜱ ᴛʜɪꜱ ᴍᴇꜱꜱᴀɢᴇ ᴡɪʟʟ ʙᴇ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴅᴇʟᴇᴛᴇᴅ\n\n★ ᴘᴏᴡᴇʀᴇᴅ ʙʏ : [Cinemathattakam](https://t.me/CT_Arena)\n\nSᴇᴀʀᴄʜᴇᴅ Fɪʟᴇ : {search} | Tᴏᴛᴀʟ Rᴇsᴜʟᴛs : {count}\nᴘᴀɢᴇ {crnt_pg}/{tot_pg}"
 
 
 REMOVE_WORDS = [
