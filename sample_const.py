@@ -3,7 +3,7 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-START_IMG = ["AgACAgUAAxkBAAEXKhxoMEd2Abzhlzk6aejybo7YGXQLzAAC8dAxG3iSgFVvGkrdpcunpQAIAQADAgADeAAHHgQ",]
+START_IMG = ["AgACAgUAAxkBAAMKaDBJVWT3JHVJUpjgUCEqanSVLJQAAmfHMRu90IBVgDcZvfxN_80ACAEAAwIAA3gABx4E",]
 # NOT_F_IMG = "AgACAgUAAxkBAAIBFmgtjK0tpLrMIij_gmxL-X7UZcmOAAJxwjEbeVdwVdo_WznufZ4gAAgBAAMCAAN5AAceBA"
 
 def get_start_kb(bot_username):
