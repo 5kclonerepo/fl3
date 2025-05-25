@@ -108,7 +108,7 @@ async def manual_index(bot, message):
     try:
         chat_id, start_msg_id, last_msg_id = extract_links(args)
         try:
-            await bot.get_messages(chat_id=int(chat_id), message_ids=int(last_msg_id)
+            await bot.get_messages(chat_id=int(chat_id), message_ids=int(last_msg_id))
         except Exception as e:
             await message.reply(f"Error while indexing: `{e}`")
             return
