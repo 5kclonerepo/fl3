@@ -122,7 +122,8 @@ def session_scope():
 async def save_file(media):
     file_id, file_ref = unpack_new_file_id(media.file_id)
     with INSERTION_LOCK:
-        with session_scope() as session:
+        try:
+            with session_scope() as session:
                 try:
                     file = session.query(Files).filter_by(file_id=file_id).one()
                     LOGGER.warning("%s is already saved in the database", media.file_name)
@@ -160,6 +161,9 @@ async def save_file(media):
                         LOGGER.info("%s is saved in database", media.file_name)
                         session.add(file)
                         return True
+
+
+
         except Exception as e:
             LOGGER.warning("Error occurred while saving file in database: %s", str(e))
            
