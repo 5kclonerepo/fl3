@@ -122,53 +122,47 @@ def session_scope():
 async def save_file(media):
     file_id, file_ref = unpack_new_file_id(media.file_id)
     with INSERTION_LOCK:
-        try:
-            file = SESSION.query(Files).filter_by(file_id=file_id).one()
-            LOGGER.warning("%s is already saved in the database", media.file_name)
-            return "duplicate"
-        except NoResultFound:
-            try:
-                file = (
-                    SESSION.query(Files)
-                    .filter_by(file_name=media.file_name, file_size=media.file_size)
-                    .one()
-                )
-                LOGGER.warning(
-                    "%s : %s is already saved in the database",
-                    media.file_name,
-                    media.file_size,
-                )
-                return "duplicate"
-            except NoResultFound:
-                cleaned_fn = clean_text(media.file_name) if media.file_name else ""
-                cleaned_cp = clean_text(media.caption) if media.caption else ""
-                search_vector = func.to_tsvector(
-                    "simple",
-                    func.coalesce(cleaned_fn, "") + " " + func.coalesce(cleaned_cp, ""),
-                )
-                file = Files(
-                    file_name=media.file_name,
-                    file_id=file_id,
-                    file_ref=file_ref,
-                    file_size=media.file_size,
-                    file_type=media.file_type,
-                    mime_type=media.mime_type,
-                    caption=media.caption if media.caption else None,
-                    search_vector=search_vector,
-                )
-                LOGGER.info("%s is saved in database", media.file_name)
-                SESSION.add(file)
-                SESSION.commit()
-                return True
-            except Exception as e:
-                LOGGER.warning(
-                    "Error occurred while saving file in database: %s", str(e)
-                )
-                SESSION.rollback()
-                return False
+        with session_scope() as session:
+                try:
+                    file = session.query(Files).filter_by(file_id=file_id).one()
+                    LOGGER.warning("%s is already saved in the database", media.file_name)
+                    return "duplicate"
+                except NoResultFound:
+                    try:
+                        file = (
+                            session.query(Files)
+                            .filter_by(file_name=media.file_name, file_size=media.file_size)
+                            .one()
+                        )
+                        LOGGER.warning(
+                            "%s : %s is already saved in the database",
+                            media.file_name,
+                            media.file_size,
+                        )
+                        return "duplicate"
+                    except NoResultFound:
+                        cleaned_fn = clean_text(media.file_name) if media.file_name else ""
+                        cleaned_cp = clean_text(media.caption) if media.caption else ""
+                        search_vector = func.to_tsvector(
+                            "simple",
+                            func.coalesce(cleaned_fn, "") + " " + func.coalesce(cleaned_cp, ""),
+                        )
+                        file = Files(
+                            file_name=media.file_name,
+                            file_id=file_id,
+                            file_ref=file_ref,
+                            file_size=media.file_size,
+                            file_type=media.file_type,
+                            mime_type=media.mime_type,
+                            caption=media.caption if media.caption else None,
+                            search_vector=search_vector,
+                        )
+                        LOGGER.info("%s is saved in database", media.file_name)
+                        session.add(file)
+                        return True
         except Exception as e:
             LOGGER.warning("Error occurred while saving file in database: %s", str(e))
-            SESSION.rollback()
+           
             return False
 
 
