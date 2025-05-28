@@ -233,7 +233,7 @@ UTIL_HLP_MSG = """
 
 
 def nf_txt(mention, search):
-    return f"𝗛ᴇʏ **{mention}**,\nCᴏᴜʟᴅɴ'ᴛ Fɪɴᴅ Tʜᴇ Fɪʟᴇ Yᴏᴜ Rᴇqᴜᴇꜱᴛᴇᴅ.\nMᴀᴋᴇ Sᴜʀᴇ Tʜᴇ Cᴏʀʀᴇᴄᴛ Sᴩᴇʟʟɪɴɢ.\nTʀʏ Sᴇᴀʀᴄʜɪɴɢ `{search}` ᴏɴ Gᴏᴏɢʟᴇ!"
+    return f"𝗛ᴇʏ **{mention}**,\n𝗦𝗼𝗿𝗿𝘆, 𝗜 𝗖𝗼𝘂𝗱𝗻❜𝘁 𝗙𝗶𝗻𝗱 𝗧𝗵𝗮𝘁 𝗠𝗼𝘃𝗶𝗲 𝗜𝗻 𝗠𝘆 𝗗𝗮𝘁𝗮𝗯𝗮𝘀𝗲 🔍🙇.\n🚧 𝗠𝗮𝘆𝗯𝗲 𝗧𝗵𝗲 𝗠𝗼𝘃𝗶𝗲 𝗜𝘀 𝗡𝗼𝘁 𝗬𝗲𝘁 𝗥𝗲𝗹𝗲𝗮𝘀𝗲𝗱,🚧.\n𝗢𝗿 𝗧𝗵𝗲 𝗦𝗽𝗲𝗹𝗹𝗶𝗻𝗴 𝗬𝗼𝘂 𝗦𝗲𝗻𝘁 𝗜𝘀 𝗪𝗿𝗼𝗻𝗴 ❌.\n𝗣𝗹𝗲𝗮𝘀𝗲 𝗗𝗼𝘂𝗯𝗹𝗲 𝗰𝗵𝗲𝗰𝗸 𝗬𝗼𝘂𝗿 𝗦𝗽𝗲𝗹𝗹𝗶𝗻𝗴 ‼️.\n♻️ Tʀʏ Sᴇᴀʀᴄʜɪɴɢ ♻️ `{search}` ᴏɴ Gᴏᴏɢʟᴇ!"
 
 
 def res_txt(mention, search, botmention, count, crnt_pg, tot_pg):
