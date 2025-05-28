@@ -233,7 +233,7 @@ UTIL_HLP_MSG = """
 
 
 def nf_txt(mention, search): 
-    return f"𝗛ᴇʏ **{mention}**,\n>✧ **Mᴏᴠɪᴇ Nᴏᴛ Fᴏᴜɴᴅ Iɴ Mʏ DB🔍🙇.**\n>✧ 𝗥𝗘𝗔𝗦𝗢𝗡-✧ OTT Nᴏᴛ Rᴇʟᴇᴀsᴇᴅ,✧ Sᴘᴇʟʟɪɴɢ Is Wʀᴏɴɢ**\n>✧ ** Tʀʏ Sᴇᴀʀᴄʜɪɴɢ  `{search}` ᴏɴ Gᴏᴏɢʟᴇ!**"
+    return f"𝗛ᴇʏ **{mention}**,\n>✧ **Mᴏᴠɪᴇ Nᴏᴛ Fᴏᴜɴᴅ Iɴ Mʏ DB🔍🙇.**\n✧ 𝗥𝗘𝗔𝗦𝗢𝗡-**✧ OTT Nᴏᴛ Rᴇʟᴇᴀsᴇᴅ,✧ Sᴘᴇʟʟɪɴɢ Is Wʀᴏɴɢ**\n✧ ** Tʀʏ Sᴇᴀʀᴄʜɪɴɢ  `{search}` ᴏɴ Gᴏᴏɢʟᴇ!**"
 
 
 def res_txt(mention, search, botmention, count, crnt_pg, tot_pg):
