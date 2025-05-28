@@ -284,6 +284,7 @@ async def get_active_force_subs():
                 .all()
             )
             return [{
+                "id": sub.id,
                 "chat_id": sub.chat_id,
                 "chat_title": sub.chat_title,
                 "chat_link": sub.chat_link,
