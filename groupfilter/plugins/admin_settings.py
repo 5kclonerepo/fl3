@@ -208,15 +208,15 @@ async def addfilter(client, message):
     elif reply_msg.photo:
         media_type = "photo"
         file_id = reply_msg.photo.file_id
-        filter_text = reply_msg.caption.markdown
+        filter_text = reply_msg.caption.markdown if reply_msg.caption else None
     elif reply_msg.video:
         media_type = "video"
         file_id = reply_msg.video.file_id
-        filter_text = reply_msg.caption.markdown
+        filter_text = reply_msg.caption.markdown if reply_msg.caption else None
     elif reply_msg.animation:
         media_type = "animation"
         file_id = reply_msg.animation.file_id
-        filter_text = reply_msg.caption.markdown
+        filter_text = reply_msg.caption.markdown if reply_msg.caption else None
     elif reply_msg.sticker:
         media_type = "sticker"
         file_id = reply_msg.sticker.file_id
