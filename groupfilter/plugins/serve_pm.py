@@ -77,7 +77,7 @@ async def filter_pm(bot, message, search=None):
                 for row in btn_data
             ]
             btns = InlineKeyboardMarkup(btns)
-        if fltr.media_type == "photo":
+        if fltr["media_type"] == "photo":
             await message.reply_photo(
                 fltr["file_id"], caption=fltr["message"], reply_markup=btns
             )
