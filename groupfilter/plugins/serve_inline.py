@@ -77,7 +77,7 @@ async def answer(bot, query):
         if admin_settings["caption_uname"]:
             f_caption = f_caption + "\n\n" + admin_settings["caption_uname"]
             
-        f_caption = f_caption.format(file_name=file_name, mention=mention, caption=caption)
+        f_caption = f_caption.format(file_name=file_name, mention=mention, caption=caption, file_size=size)
         reply_markup = get_reply_markup(string)
         results.append(
             InlineQueryResultCachedDocument(
