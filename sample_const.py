@@ -96,8 +96,9 @@ HELP_BK_KB = InlineKeyboardMarkup(
 )
 
 
+
 def nf_kb(search):
-    search = search.replace(" ", "+")
+    search = re.sub(r"\s+", "+", search.strip())
     return InlineKeyboardMarkup(
         [
             [
