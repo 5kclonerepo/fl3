@@ -103,7 +103,7 @@ def nf_kb(search):
         [
             [
                 InlineKeyboardButton(
-                "🔍 Cᴏʀʀᴇᴄᴛ Sᴘᴇʟʟɪɴɢ (Gᴏᴏɢʟᴇ)...🔎",
+                "🔍 Sᴇᴀʀᴄʜ Tʜᴇ Cᴏʀʀᴇᴄᴛ Sᴘᴇʟʟɪɴɢ Fʀᴏᴍ Gᴏᴏɢʟᴇ...🔎",
                     url=f"https://www.google.com/search?q={search}",
             ),
         ]
