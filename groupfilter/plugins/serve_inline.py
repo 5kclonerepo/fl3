@@ -62,28 +62,33 @@ async def answer(bot, query):
         return
 
     reply_markup = get_reply_markup(string)
-
+    
+    f_caption = ""
     for file in files:
-        file_name = file["file_name"]
         caption = file["caption"]
-        # file_name = clean_fname(file_name)
-        # file_name = clean_se(file_name)
-        size = get_size(file["file_size"])
-        f_caption = file["caption"] or file_name
+        file_name = file["file_name"]Add commentMore actions
+        file_size = get_size(file["file_size"])
         if admin_settings["custom_caption"]:
             f_caption = admin_settings["custom_caption"]
-        elif f_caption is None:
-            f_caption = "<b>" + f"{files.file_name}" + "</b>"
-        if admin_settings["caption_uname"]:
-            f_caption = f_caption + "\n\n" + admin_settings["caption_uname"]
+        else:Add commentMore actions
+            f_caption = f"{file['file_name']}"
             
-        f_caption = f_caption.format(file_name=file_name, mention=mention, caption=caption, file_size=size)
+        if "{file_name}" in f_caption:
+            f_caption = f_caption.replace("{file_name}", file_name)
+        if "{caption}" in f_caption:
+            f_caption = f_caption.replace("{caption}", caption)
+        if "{file_size}" in f_caption:
+            f_caption = f_caption.replace("{file_size}", file_size)
+        if "{mention}" in f_caption:
+            f_caption = f_caption.replace("{mention}", mention)
+            
         reply_markup = get_reply_markup(string)
         results.append(
             InlineQueryResultCachedDocument(
                 title=file_name,
                 document_file_id=file["file_id"],
                 caption=f_caption,
+                description=f'Size: {file_size}\nType: {file["file_type"]}',
                 description=f'Size: {size}\nType: {file["file_type"]}',
                 reply_markup=reply_markup,
             )
