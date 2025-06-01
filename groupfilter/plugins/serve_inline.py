@@ -89,7 +89,6 @@ async def answer(bot, query):
                 document_file_id=file["file_id"],
                 caption=f_caption,
                 description=f'Size: {file_size}\nType: {file["file_type"]}',
-                description=f'Size: {size}\nType: {file["file_type"]}',
                 reply_markup=reply_markup,
             )
         )
