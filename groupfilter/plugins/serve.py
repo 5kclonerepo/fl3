@@ -523,7 +523,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
         f_caption = f_caption.replace("{caption}", caption)
     if "{file_size}" in f_caption:
         f_caption = f_caption.replace("{file_size}", file_size)
-    if "{mention}" in f_caption:Add commentMore actions 
+    if "{mention}" in f_caption:
         f_caption = f_caption.replace("{mention}", mention)
     
 
