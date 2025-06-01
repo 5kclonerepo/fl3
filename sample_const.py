@@ -223,15 +223,20 @@ UTIL_HLP_MSG = """
 >**Utility Commands**
 >__Access bot logs, server stats, restart the bot, get user and file counts, send broadcasts, and more.__
 
+File Utilities:
+‣ /total - __Get count of total files in DB__
+‣ /clearfiles - __Clear all files from DB__
+‣ /clearusers - __Clear all users from DB__
+‣ /clearfsubusers - __Clear all force subscribe users from db__
+‣ /channelpost - __Post search link to channels__
+
+Admin Utilities:
 ‣ /logs - __Get logs as a file__
 ‣ /server - __Get server stats__
 ‣ /restart - __Restart the bot__
 ‣ /stats - __Get bot user stats (Will send only after checking active users__
 ‣ /broadcast - __Reply to a message to send that to all bot users__
-‣ /total - __Get count of total files in DB__
-‣ /clearfiles - __Clear all files from DB__
-‣ /clearusers - __Clear all users from DB__
-‣ /clearfsubusers - __Clear all force subscribe users from db__
+
 """
 
 
