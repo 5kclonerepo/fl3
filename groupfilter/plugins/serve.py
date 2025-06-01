@@ -386,7 +386,7 @@ async def get_result(search, page_no, user_id, username, chat_id, mention, botme
                     btn[1].append(btn_kb)
             else:
                 tr_f_name = trim_button_text(file_name)
-                filename = f"▸{file_size} ➽ {tr_f_name}"
+                filename = f"◉【{file_size}】➽ {tr_f_name}"
                 btn_kb = InlineKeyboardButton(
                     text=filename,
                     callback_data=f"file#{file_id}#{user_id}",
