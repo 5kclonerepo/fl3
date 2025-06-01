@@ -238,7 +238,13 @@ async def post_to_channels(bot, query):
 
         custom_link = f"https://t.me/{bot.me.username}?start=search_{file_name.replace(' ', '_').lower()}"
         reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Get the File 🔎", url=custom_link)]]
+            [
+                [InlineKeyboardButton("Gᴇᴛ Tʜᴇ Fɪʟᴇ... 🔎", url=custom_link)],
+                [
+                    InlineKeyboardButton("👨‍💻 Uᴘᴅᴀᴛᴇ Cʜᴀɴɴᴇʟ", url="https://ct_updatez"),
+                    InlineKeyboardButton("📢 Mᴀɪɴ Cʜᴀɴɴᴇʟ", url="https://t.me/CT_Arena")
+                ]
+            ]
         )
         caption = (
             f"**✅ {textchanger(movie_title, selected_font)} ({textchanger(str(year), selected_font)})**\n\n"
@@ -261,13 +267,13 @@ async def post_to_channels(bot, query):
                 )
                 LOGGER.error(f"Error posting to channel {channel_id}: {str(e)}")
         await query.message.edit_text(
-            "✅ Mᴏᴠɪᴇ ᴅᴇᴛᴀɪʟs sᴜᴄᴄᴇssғᴜʟʟʏ ᴘᴏsᴛᴇᴅ ᴛᴏ ᴄʜᴀɴɴᴇʟs..."
+            "✅ Mᴏᴠɪᴇ ᴅᴇᴛᴀɪʟs sᴜᴄᴄᴇssғᴜʟʟʏ ᴘᴏsᴛᴇᴅ ɪɴ ᴄʜᴀɴɴᴇʟ..."
         )
         temp.clear()
     elif action == "no":
         await query.answer("Cancelling...")
         await query.message.edit_text(
-            "❌ Mᴏᴠɪᴇ ᴅᴇᴛᴀɪʟs ᴡɪʟʟ ᴄᴀɴɴᴏᴛ ʙᴇ ᴘᴏsᴛᴇᴅ ᴛᴏ ᴄʜᴀɴɴᴇʟs..."
+            "❌ Mᴏᴠɪᴇ ᴅᴇᴛᴀɪʟs Pᴏsᴛɪɴɢ Cᴀɴᴄᴇʟʟᴇᴅ..."
         )
         temp.clear()
 
