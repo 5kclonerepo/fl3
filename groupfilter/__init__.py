@@ -36,6 +36,13 @@ DELIVERY_CHANNELS = [
     {"chat_id": int(item.split("|")[0]), "link": item.split("|")[1]}
     for item in delivery_channels.split(",") if "|" in item
 ]
+POST_CHANNELS = [
+    int(ch) if id_pattern.search(ch) else ch
+    for ch in os.environ.get("POST_CHANNELS", "").split()
+]
+MAX_LIST_ELM = int(os.getenv("MAX_LIST_ELM", "0"))
+LONG_IMDB_DESCRIPTION = int(os.getenv("LONG_IMDB_DESCRIPTION", "0"))
+
 
 try:
     import const
