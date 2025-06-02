@@ -371,7 +371,7 @@ async def get_pm_files(bot, query):
         cbq = True
         try:
             file_id = query.data.split("#")[1]
-            await query.answer("Sending file...", cache_time=10)
+            await query.answer("🗃️ Yᴏᴜʀ Fɪʟᴇ Is Sᴇɴᴅɪɴɢ, PLᴇᴀsᴇ Wᴀɪᴛ...", cache_time=10)
         except QueryIdInvalid:
             await bot.send_message(
                 user_id,
