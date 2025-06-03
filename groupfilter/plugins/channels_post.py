@@ -185,7 +185,7 @@ async def preview_movie_details(bot, query):
         f"🎙️ Audio: {textchanger(selected_languages, selected_font)}\n\n"
         f"📽️ Genre: {textchanger(genres, selected_font)}\n\n"
         f"⭐ [{textchanger('IMDB Info', selected_font)}]({url}) | "
-        f"{textchanger('Rating:', selected_font)} {textchanger(str(rating), selected_font)}"
+        f">**{textchanger('Rating:', selected_font)} {textchanger(str(rating), selected_font)}**"
     )
     confirm_markup = InlineKeyboardMarkup(
         [
@@ -251,6 +251,7 @@ async def post_to_channels(bot, query):
             f"**🎙️ Audio: {textchanger(selected_languages, selected_font)}**\n\n"
             f"**📽️ Genres: {textchanger(genres, selected_font)}**\n\n"
             f"**⭐ [{textchanger('IMDB Info')}]({url})**"
+            f">**{textchanger('Rating:', selected_font)} {textchanger(str(rating), selected_font)}**"
         )
         for channel_id in POST_CHANNELS:
             try:
