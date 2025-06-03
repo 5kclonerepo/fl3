@@ -110,6 +110,14 @@ def nf_kb(search):
     ]
 )
 
+REPAIR_KB = InlineKeyboardMarkup(Add commentMore actions
+    [
+        [
+            InlineKeyboardButton("⭕️ 𝗨𝗽𝗱𝗮𝘁𝗲 𝗖𝗵𝗮𝗻𝗻𝗲𝗹 ⭕️", url="https://t.me/CT_Updatez"),
+        ],
+    ]
+)
+
 
 START_MSG = "Hᴇʏ Tʜᴇʀᴇ {}, Mʏ Nᴀᴍᴇ ɪs **{}** .\n\n**Yᴏᴜʀ Mᴀɢɪᴄᴀʟ Assɪsᴛᴀɴᴛ Fᴏʀ Fɪɴᴅɪɴɢ Fɪʟᴇs Iɴ A Fʟᴀsʜ!**\n**Jᴜsᴛ Tᴇʟʟ Mᴇ Wʜᴀᴛ Yᴏᴜ'ʀᴇ Lᴏᴏᴋɪɴɢ Fᴏʀ — Mᴏᴠɪᴇs, Sᴇʀɪᴇs, Dᴏᴄᴜᴍᴇɴᴛs — Aɴᴅ Pᴏᴏғ! 🎩✨ I’ʟʟ Fᴇᴛᴄʜ Iᴛ Fᴏʀ Yᴏᴜ Iɴsᴛᴀɴᴛʟʏ...**\n**Jᴜsᴛ Aᴅᴅ Mᴇ Iɴ Yᴏᴜʀ Gʀᴏᴜᴘs,Oʀ Jᴜsᴛ Sᴇɴᴅ Mᴏᴠɪᴇ Nᴀᴍᴇ Hᴇʀᴇ, **\n\n>  **I'ᴍ Rᴇᴀᴅʏ Tᴏ Assɪsᴛ ʏᴏᴜ 24/7! 🕒**"
 
@@ -239,6 +247,12 @@ Admin Utilities:
 
 """
 
+REPAIR_MSG = """Add commentMore actions
+>Bᴏᴛ Is Uɴᴅᴇʀ Mᴀɪɴᴛᴇɴᴀɴᴄᴇ...! 🔧🤖⚙️
+>Pʟᴇᴀsᴇ Bᴇ Pᴀᴛɪᴇɴᴛ 
+>
+>Fᴜʀᴛʜᴇʀ Uᴘᴅᴀᴛᴇs Wɪʟʟ Bᴇ Uᴘᴅᴀᴛᴇᴅ Iɴ Oᴜʀ Uᴘᴅᴀᴛᴇ Cʜᴀɴɴᴇʟ
+>Jᴏɪɴ Tʜᴇʀᴇ Aɴᴅ Wᴀɪᴛ 🫷"""
 
 def nf_txt(mention, search): 
     return f"𝗛ᴇʏ **{mention}**,\n>✧ **Mᴏᴠɪᴇ Nᴏᴛ Fᴏᴜɴᴅ Iɴ Mʏ DB🔍🙇.**\n**✧ OTT Nᴏᴛ Rᴇʟᴇᴀsᴇᴅ,\n✧ Sᴘᴇʟʟɪɴɢ Is Wʀᴏɴɢ**\n✧ ** Tʀʏ Sᴇᴀʀᴄʜɪɴɢ  `{search}` ᴏɴ Gᴏᴏɢʟᴇ!**"
