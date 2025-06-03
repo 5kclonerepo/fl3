@@ -36,7 +36,7 @@ from groupfilter.db.promo_sql import get_promos
 from groupfilter.plugins.fsub import is_fsub
 from groupfilter.utils.helpers import clean_text, clean_fname, clean_se
 from groupfilter.plugins.serve import scheduler, del_message, get_size, trim_button_text
-from sample_const import nf_txt, nf_kb, res_txt, NOT_F_IMG
+from sample_const import nf_txt, nf_kb, res_txt, NOT_F_IMG, REPAIR_MSG, REPAIR_KB
 from groupfilter import LOGGER, DELIVERY_CHANNELS
 
 
@@ -61,7 +61,7 @@ async def filter_pm(bot, message, search=None):
     admin_settings = await get_admin_settings()
     if admin_settings:
         if admin_settings["repair_mode"]:
-            await message.reply_text("Bot is in repair mode.", quote=True)
+            await message.reply_text(REPAIR_MSG, quote=True, reply_markup=REPAIR_KB)
             return
 
     fltr = await is_filter(message.text)
