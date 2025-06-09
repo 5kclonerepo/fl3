@@ -607,11 +607,11 @@ async def send_pm_file(admin_settings, bot, query, user_id, file_id, cbq):
                     max_instances=500000,
                     misfire_grace_time=100,
                 )
-            txt = "File has been deleted"
+            txt = "𝙔𝙤𝙪𝙧 𝙁𝙞𝙡𝙚 𝙃𝙖𝙨 𝘽𝙚𝙚𝙣 𝘿𝙚𝙡𝙚𝙩𝙚𝙙 𝘿𝙪𝙚 𝙏𝙤 𝘾𝙤𝙥𝙮𝙧𝙞𝙜𝙝𝙩 𝙄𝙨𝙨𝙪𝙚𝙨 ✅"
             scheduler.add_job(
                 del_message,
                 trigger,
-                args=[msg.chat.id, msg.id, txt],
+                args=[msg.chat.id, msg.id, txt, str(delay_dur)],
                 max_instances=500000,
                 misfire_grace_time=100,
             )
