@@ -86,6 +86,7 @@ async def start(bot, update):
                 await get_inline_fsub(bot, update)
             else:
                 await get_files(bot, update)
+            await update.delete()
         except Exception as e:
             LOGGER.warning(e)
 
