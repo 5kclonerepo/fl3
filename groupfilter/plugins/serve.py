@@ -723,7 +723,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
             scheduler.add_job(
                 del_message,
                 trigger,
-                args=[msg.chat.id, msg.id, txt],
+                args=[msg.chat.id, msg.id, txt, str(delay_dur)],
                 max_instances=500000,
                 misfire_grace_time=100,
             )
@@ -766,10 +766,19 @@ async def clear_cache(bot, message=None, mess=True):
         await message.reply_text("Stored cache cleared", quote=True)
 
 
-async def del_message(chat_id: int, message_id: int, txt=None):
+async def del_message(chat_id: int, message_id: int, txt=None, delay_dur=None):
     try:
         await app.delete_messages(chat_id=chat_id, message_ids=message_id)
         if txt:
+            file_del_msg = await app.send_message(chat_id=chat_id, text=txt)
+            trigger = DateTrigger(run_date=datetime.now() + timedelta(seconds=int(delay_dur)))
+            scheduler.add_job(
+                del_message,
+                trigger,
+                args=[file_del_msg.chat.id, file_del_msg.id],
+                max_instances=500000,
+                misfire_grace_time=200,
+            )
             await app.send_message(chat_id=chat_id, text=txt)
     except Exception as e:
         LOGGER.warning(
