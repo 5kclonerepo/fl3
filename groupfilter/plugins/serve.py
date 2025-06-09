@@ -602,7 +602,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                 )
                 msg = await bot.send_message(
                     chat_id=user_id,
-                    text=">**File has been sent to redirect channel.**\n\nTap on request redirect button & then tap on the file button to get the file.",
+                    text=">**📂 Tʜᴇ Fɪʟᴇ Yᴏᴜ Rᴇᴏ̨ᴜᴇsᴛᴇᴅ Hᴀs Bᴇᴇɴ Sᴇɴᴛ Tᴏ Rᴇᴅɪʀᴇᴄᴛ Cʜᴀɴɴᴇʟ ✅.**\n\n**★ 𝙏𝙖𝙥 𝙊𝙣 𝙍𝙚𝙦𝙪𝙚𝙨𝙩 𝙍𝙚𝙙𝙞𝙧𝙚𝙘𝙩 𝘽𝙪𝙩𝙩𝙤𝙣 & 𝙏𝙖𝙥 𝙊𝙣 𝙁𝙞𝙡𝙚 𝘽𝙪𝙩𝙩𝙤𝙣 𝙏𝙤 𝙂𝙚𝙩 𝙏𝙝𝙚 𝙁𝙞𝙡𝙚 ★.**\n\n **Lɪᴋᴇ🧡 Sʜᴀʀᴇ📤 & Sᴜᴘᴘᴏʀᴛ🗣️**\n**Yᴏᴜʀ ᴇɴɢᴀɢᴇᴍᴇɴᴛ ʜᴇʟᴘs ᴜs sʜɪɴᴇ ✨**",
                     reply_markup=link_kb,
                 )
             else:
@@ -659,7 +659,7 @@ async def send_file(admin_settings, bot, query, user_id, file_id):
                 )
                 msg = await bot.send_message(
                     chat_id=user_id,
-                    text=">**File has been sent to redirect channel.**\n\nTap on request redirect button & then tap on the file button to get the file.",
+                    text=">**📂 Tʜᴇ Fɪʟᴇ Yᴏᴜ Rᴇᴏ̨ᴜᴇsᴛᴇᴅ Hᴀs Bᴇᴇɴ Sᴇɴᴛ Tᴏ Rᴇᴅɪʀᴇᴄᴛ Cʜᴀɴɴᴇʟ ✅.**\n\n**★ 𝙏𝙖𝙥 𝙊𝙣 𝙍𝙚𝙦𝙪𝙚𝙨𝙩 𝙍𝙚𝙙𝙞𝙧𝙚𝙘𝙩 𝘽𝙪𝙩𝙩𝙤𝙣 & 𝙏𝙖𝙥 𝙊𝙣 𝙁𝙞𝙡𝙚 𝘽𝙪𝙩𝙩𝙤𝙣 𝙏𝙤 𝙂𝙚𝙩 𝙏𝙝𝙚 𝙁𝙞𝙡𝙚 ★.**\n\n **Lɪᴋᴇ🧡 Sʜᴀʀᴇ📤 & Sᴜᴘᴘᴏʀᴛ🗣️**\n**Yᴏᴜʀ ᴇɴɢᴀɢᴇᴍᴇɴᴛ ʜᴇʟᴘs ᴜs sʜɪɴᴇ ✨**",
                     reply_markup=link_kb,
                 )
             else:
