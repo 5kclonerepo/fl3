@@ -18,4 +18,4 @@ uvloop
 redis
 bs4
 cinemagoer
-requests
+requests>=2.31.0
