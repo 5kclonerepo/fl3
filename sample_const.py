@@ -99,7 +99,7 @@ HELP_BK_KB = InlineKeyboardMarkup(
 
 def nf_kb(search):
     search = re.sub(r"\s+", "+", search.strip())
-return InlineKeyboardMarkup(
+    return InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
@@ -114,7 +114,7 @@ return InlineKeyboardMarkup(
             )
         ]
     ]
-)
+    )
 
 REPAIR_KB = InlineKeyboardMarkup(
     [
