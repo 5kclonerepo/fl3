@@ -261,7 +261,7 @@ REPAIR_MSG = """
 >**Jᴏɪɴ Tʜᴇ Bᴇʟᴏᴡ Cʜᴀɴɴᴇʟ Aɴᴅ Wᴀɪᴛ 🫷**"""
 
 def nf_txt(mention, search): 
-    return f"𝗛ᴇʏ **{mention}**,\n>✧ **Mᴏᴠɪᴇ Nᴏᴛ Fᴏᴜɴᴅ Iɴ Mʏ DB🔍🙇.**\n**✧ OTT Nᴏᴛ Rᴇʟᴇᴀsᴇᴅ,\n✧ Sᴘᴇʟʟɪɴɢ Is Wʀᴏɴɢ**\n✧ ** Tʀʏ Sᴇᴀʀᴄʜɪɴɢ  `{search}` ᴏɴ Gᴏᴏɢʟᴇ!**\nIғ Sᴘᴇʟʟɪɴɢ Is Cᴏʀʀᴇᴄᴛ & OTT Is Rᴇʟᴇᴀsᴇᴅ, Tʜᴇɴ Rᴇᴘᴏʀᴛ Fᴏʀ Rᴀʀᴇ Mᴏᴠɪᴇ Bʏ Cʟɪᴄᴋɪɴɢ Sᴇᴄᴏɴᴅ Bᴜᴛᴛᴏɴ ✨"
+    return f"𝗛ᴇʏ **{mention}**,\n>✧ **Mᴏᴠɪᴇ Nᴏᴛ Fᴏᴜɴᴅ Iɴ Mʏ DB🔍🙇.**\n**✧ OTT Nᴏᴛ Rᴇʟᴇᴀsᴇᴅ,\n✧ Sᴘᴇʟʟɪɴɢ Is Wʀᴏɴɢ**\n✧ ** Tʀʏ Sᴇᴀʀᴄʜɪɴɢ  `{search}` ᴏɴ Gᴏᴏɢʟᴇ!**\n**>Iғ Sᴘᴇʟʟɪɴɢ Is Cᴏʀʀᴇᴄᴛ & OTT Is Rᴇʟᴇᴀsᴇᴅ, Tʜᴇɴ Rᴇᴘᴏʀᴛ Fᴏʀ Rᴀʀᴇ Mᴏᴠɪᴇ Bʏ Cʟɪᴄᴋɪɴɢ Sᴇᴄᴏɴᴅ Bᴜᴛᴛᴏɴ ✨**"
 
 
 def res_txt(mention, search, botmention, count, crnt_pg, tot_pg):
