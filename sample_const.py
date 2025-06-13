@@ -99,13 +99,19 @@ HELP_BK_KB = InlineKeyboardMarkup(
 
 def nf_kb(search):
     search = re.sub(r"\s+", "+", search.strip())
-    return InlineKeyboardMarkup(
+return InlineKeyboardMarkup(
+    [
         [
-            [
-                InlineKeyboardButton(
+            InlineKeyboardButton(
                 "🔍 Sᴇᴀʀᴄʜ Tʜᴇ Cᴏʀʀᴇᴄᴛ Sᴘᴇʟʟɪɴɢ Fʀᴏᴍ Gᴏᴏɢʟᴇ...🔎",
-                    url=f"https://www.google.com/search?q={search}",
-            ),
+                url=f"https://www.google.com/search?q={search}",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "🎭 Rᴇᴘᴏʀᴛ Fᴏʀ Rᴀʀᴇ Mᴏᴠɪᴇ 🎭",
+                url=f"https://t.me/Hannibal_Lectarbot?start=true"
+            )
         ]
     ]
 )
@@ -255,7 +261,7 @@ REPAIR_MSG = """
 >**Jᴏɪɴ Tʜᴇ Bᴇʟᴏᴡ Cʜᴀɴɴᴇʟ Aɴᴅ Wᴀɪᴛ 🫷**"""
 
 def nf_txt(mention, search): 
-    return f"𝗛ᴇʏ **{mention}**,\n>✧ **Mᴏᴠɪᴇ Nᴏᴛ Fᴏᴜɴᴅ Iɴ Mʏ DB🔍🙇.**\n**✧ OTT Nᴏᴛ Rᴇʟᴇᴀsᴇᴅ,\n✧ Sᴘᴇʟʟɪɴɢ Is Wʀᴏɴɢ**\n✧ ** Tʀʏ Sᴇᴀʀᴄʜɪɴɢ  `{search}` ᴏɴ Gᴏᴏɢʟᴇ!**"
+    return f"𝗛ᴇʏ **{mention}**,\n>✧ **Mᴏᴠɪᴇ Nᴏᴛ Fᴏᴜɴᴅ Iɴ Mʏ DB🔍🙇.**\n**✧ OTT Nᴏᴛ Rᴇʟᴇᴀsᴇᴅ,\n✧ Sᴘᴇʟʟɪɴɢ Is Wʀᴏɴɢ**\n✧ ** Tʀʏ Sᴇᴀʀᴄʜɪɴɢ  `{search}` ᴏɴ Gᴏᴏɢʟᴇ!**\nIғ Sᴘᴇʟʟɪɴɢ Is Cᴏʀʀᴇᴄᴛ & OTT Is Rᴇʟᴇᴀsᴇᴅ, Tʜᴇɴ Rᴇᴘᴏʀᴛ Fᴏʀ Rᴀʀᴇ Mᴏᴠɪᴇ Bʏ Cʟɪᴄᴋɪɴɢ Sᴇᴄᴏɴᴅ Bᴜᴛᴛᴏɴ ✨"
 
 
 def res_txt(mention, search, botmention, count, crnt_pg, tot_pg):
