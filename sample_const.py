@@ -4,7 +4,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import re
 
 START_IMG = ["https://envs.sh/gOJ.jpg?=ilovSTARLEY","https://envs.sh/gOo.jpg?=ilovSTARLEY","https://envs.sh/gO9.jpg?=ilovSTARLEY","https://envs.sh/gOs.jpg?=ilovSTARLEY","https://envs.sh/gOr.jpg?=ilovSTARLEY","https://envs.sh/gOv.jpg?=ilovSTARLEY","https://envs.sh/gON.jpg?=ilovSTARLEY",]
-NOT_F_IMG = "AgACAgUAAxkBAAIJQ2hKXfrY8nRU5k3kaqZ5az_ElekZAAK2yDEbHNpZVj-gSnCNBV9RAAgBAAMCAAN5AAceBA"
+NOT_F_IMG = "https://envs.sh/MtF.jpg?=ilovSTARLEY"
 
 def get_start_kb(bot_username):
     return InlineKeyboardMarkup(
