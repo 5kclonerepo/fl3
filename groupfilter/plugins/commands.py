@@ -76,7 +76,7 @@ async def start(bot, update):
             caption=start_msg,
             reply_to_message_id=update.reply_to_message_id,
             reply_markup=get_start_kb(bot.me.username),
-            message_effect_id=EFFECT_IDS,
+            message_effect_id=random.choice(EFFECT_IDS),
         )
     elif len(update.command) == 2:
         try:
