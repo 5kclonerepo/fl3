@@ -17,20 +17,20 @@ def get_start_kb(bot_username):
             ],
             [
                 InlineKeyboardButton(
-                    "🪄 Oᴡɴᴇʀ 🪄", url="https://t.me/Sathan_Of_Telegram"
+                    "🪄 Uᴘᴅᴀᴛᴇ Gʀᴏᴜᴘ 🪄", url="https://t.me/+UGZQkmwj2185ZjU1"
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    "⚠️ Group 1 ⚠️", url="https://t.me/Cinemathattakam_Group"
+                    "⚠️ Group 1 ⚠️", url="https://t.me/+M_hu1vNsbhgyZTQ1"
                 ),
                 InlineKeyboardButton(
-                    "✨ Group 2 ✨", url="https://t.me/Cinemathattakam_Group1"
+                    "✨ Group 2 ✨", url="https://t.me/+liQj-K2_sXhhODQ1"
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    "🥇 Mᴀɪɴ Cʜᴀɴɴᴇʟ 🥇", url="https://t.me/CT_Arena"
+                    "🥇 Mᴀɪɴ Cʜᴀɴɴᴇʟ 🥇", url="https://t.me/+TZqSmBflL7dmNTYy"
                 )
             ],
         ]
