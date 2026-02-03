@@ -42,7 +42,7 @@ START_KB = InlineKeyboardMarkup(
         [
             InlineKeyboardButton("🆘 Help", callback_data="help_cb"),
             InlineKeyboardButton(
-                "👨‍💻 Source Code", url="https://t.me/CT_Updatez/13"
+                "👨‍💻 Source Code", url="https://t.me/+UGZQkmwj2185ZjU1"
             ),
         ]
     ]
@@ -110,7 +110,7 @@ def nf_kb(search):
         [
             InlineKeyboardButton(
                 "🎭 Rᴇᴘᴏʀᴛ Fᴏʀ Rᴀʀᴇ Mᴏᴠɪᴇ 🎭",
-                url=f"https://t.me/Hannibal_Lectarbot?start=true"
+                url=f"https://t.me/Imxfilm_bot?start=true"
             )
         ]
     ]
@@ -119,7 +119,7 @@ def nf_kb(search):
 REPAIR_KB = InlineKeyboardMarkup(
     [
         [
-            InlineKeyboardButton("⭕️ 𝗨𝗽𝗱𝗮𝘁𝗲 𝗖𝗵𝗮𝗻𝗻𝗲𝗹 ⭕️", url="https://t.me/CT_Updatez"),
+            InlineKeyboardButton("⭕️ 𝗨𝗽𝗱𝗮𝘁𝗲 𝗖𝗵𝗮𝗻𝗻𝗲𝗹 ⭕️", url="https://t.me/+UGZQkmwj2185ZjU1"),
         ],
     ]
 )
