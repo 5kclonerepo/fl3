@@ -17,7 +17,7 @@ def get_start_kb(bot_username):
             ],
             [
                 InlineKeyboardButton(
-                    "🪄 Uᴘᴅᴀᴛᴇ Gʀᴏᴜᴘ 🪄", url="https://t.me/+UGZQkmwj2185ZjU1"
+                    "🪄 Uᴘᴅᴀᴛᴇ Gʀᴏᴜᴘ 🪄", url="https://t.me/+uTx_KlV3Ea0zZGM1"
                 ),
             ],
             [
