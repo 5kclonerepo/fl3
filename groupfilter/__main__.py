@@ -1,12 +1,17 @@
 import uvloop
+import asyncio
 
 uvloop.install()
 
-import asyncio  # noqa
-from pyropatch import pyropatch  # noqa
-from pyrogram import Client, idle, __version__  # noqa
-from pyrogram.raw.all import layer  # noqa
-from groupfilter import APP_ID, API_HASH, BOT_TOKEN, PM_SUPPORT, GROUP_SUPPORT, INLINE_SUPPORT, LOGGER  # noqa
+# Create loop BEFORE importing pyropatch
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
+from pyropatch import pyropatch
+from pyrogram import Client, idle, __version__
+from pyrogram.raw.all import layer
+from groupfilter import APP_ID, API_HASH, BOT_TOKEN, PM_SUPPORT, GROUP_SUPPORT, INLINE_SUPPORT, LOGGER
+
 
 
 app = None
@@ -48,4 +53,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
